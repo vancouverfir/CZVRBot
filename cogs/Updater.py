@@ -35,8 +35,10 @@ class Updater(commands.Cog):
         Guest = ctx.guild.get_role(1057798557811355810)
         """Updates roles for a single user"""
 
-        self.mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id = {ctx.author.id}")
-        user = self.mycurs.fetchone()
+        mycurs = self.database_connect()
+
+        mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id = {ctx.author.id}")
+        user = mycurs.fetchone()
         if not user:
             if Verified in ctx.author.roles:
                await ctx.author.edit(roles=[Verified,Guest])
@@ -49,10 +51,10 @@ class Updater(commands.Cog):
         await ctx.author.add_roles(Verified)
         await self.update_user_rating(ctx, ctx.author, user[2])
 
-        self.mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
-        status = self.mycurs.fetchone()
-        self.mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
-        instructor = self.mycurs.fetchone()
+        mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
+        status = mycurs.fetchone()
+        mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
+        instructor = mycurs.fetchone()
         await self.update_user_type(ctx, ctx.author, status[0], instructor[0])
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
 
@@ -62,6 +64,8 @@ class Updater(commands.Cog):
             name = ctx.author.name
 
         await ctx.send(f"{name}, great news! Your roles are now up to date!")
+
+        mycurs.close()
 
         print(f"Completed updating all roles for {ctx.author.name}\n")
 
@@ -91,12 +95,14 @@ class Updater(commands.Cog):
 
         print("Completed updating all user roles\n")
 
-    def get_users_data(self):
-
-        self.mycurs.execute("SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id IS NOT NULL")
-
-        result = self.mycurs.fetchall()
-        return result
+    # def get_users_data(self):
+    #
+    #     mycurs = self.database_connect()
+    #
+    #     mycurs.execute("SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id IS NOT NULL")
+    #
+    #     result = mycurs.fetchall()
+    #     return result
 
     async def update_user_rating(self, ctx, member: discord.Member, rating):
         S1 = ctx.guild.get_role(1057518699000627210)
@@ -180,3 +186,19 @@ class Updater(commands.Cog):
             await member.edit(nick=f"{fname} - {cid}")
         else:
             await member.edit(nick=f"{fname} {lname} - {cid}")
+
+
+    def database_connect(self):
+        dbhost = os.getenv('DB-HOST')
+        dbuser = os.getenv('DB-USER')
+        dbpass = os.getenv('DB-PASS')
+        dbname = os.getenv('DB-NAME')
+
+        try:
+            db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
+        except mariadb.Error as e:
+            print(f"Error connecting to MariaDB Platform: {e}")
+        else:
+            print("Connected to the database")
+            mycurs = db.cursor()
+            return mycurs
