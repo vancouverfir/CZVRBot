@@ -44,8 +44,9 @@ class Updater(commands.Cog):
                await ctx.author.edit(roles=[Verified,Guest])
             else:
                 await ctx.author.edit(roles=[])
-            await ctx.send(
-                f"{ctx.author.nick}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
+            if ctx.command.name == 'updateroles':
+                await ctx.send(
+                f"{ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
             return
 
         await ctx.author.add_roles(Verified)
@@ -58,12 +59,8 @@ class Updater(commands.Cog):
         await self.update_user_type(ctx, ctx.author, status[0], instructor[0])
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
 
-        if ctx.author.nick:
-            name = ctx.author.nick
-        else:
-            name = ctx.author.name
-
-        await ctx.send(f"{name}, great news! Your roles are now up to date!")
+        if ctx.command.name == 'updateroles':
+            await ctx.send(f"{ctx.author.mention}, great news! Your roles are now up to date!")
 
         mycurs.close()
 
@@ -93,6 +90,7 @@ class Updater(commands.Cog):
                 await self.updateroles(ctx)
 
 
+        await ctx.send("All roles have been updated")
         print("Completed updating all user roles\n")
 
     # def get_users_data(self):
