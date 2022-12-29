@@ -21,8 +21,6 @@ async def on_ready():
     print(f'We have logged in as {client.user}')
 
 
-
-
 # Cog Loading
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -56,8 +54,10 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send('```You do not have the permissions required to use this command```')
 
+
 async def main():
     await loadallcogs()
     await client.start(token)
+
 
 asyncio.run(main())

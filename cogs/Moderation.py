@@ -13,6 +13,7 @@ class Moderation(commands.Cog):
     async def clear(self, ctx, amt=5):
         """Used to delete the last messages. (Default is 5 including the command)"""
         await ctx.channel.purge(limit=amt)
+        print(f"Cleared {amt} messages\n")
 
     @commands.command(aliases=['k'])
     @commands.has_permissions(kick_members=True)
@@ -20,6 +21,7 @@ class Moderation(commands.Cog):
         """Used to kick members"""
         await mem.kick(reason=reason)
         await ctx.send(f'Kicked {mem.mention}')
+        print(f"Kicked {mem.name}\n")
 
     @commands.command(aliases=['b'])
     @commands.has_permissions(ban_members=True)
@@ -27,20 +29,21 @@ class Moderation(commands.Cog):
         """Used to ban members"""
         await mem.ban(reason=reason)
         await ctx.send(f'Banned {mem.mention}')
+        print(f"Banned {mem.name}\n")
 
     @commands.command(aliases=['ub'])
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, *, mem):
         """Used to unban members"""
-        banned = await ctx.guild.bans()
-        mem_name, mem_discriminator = mem.split('#')
+        banned = [entry async for entry in ctx.guild.bans(limit=2000)]
 
         for ban_entry in banned:
             user = ban_entry.user
 
-            if (user.name, user.discriminator) == (mem_name, mem_discriminator):
+            if user.id == mem:
                 await ctx.guild.unban(user)
                 await ctx.send(f'Unbanned {user.mention}')
+                print(f"Unbanned {user.name}\n")
                 return
 
     @commands.command(pass_contest=True)
