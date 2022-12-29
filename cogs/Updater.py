@@ -31,20 +31,37 @@ class Updater(commands.Cog):
     @commands.command()
     async def updateroles(self, ctx):
         print(f"Updating roles for {ctx.author.name}")
+        Verified = ctx.guild.get_role(1057895094495215719)
+        Guest = ctx.guild.get_role(1057798557811355810)
         """Updates roles for a single user"""
 
-        self.mycurs.execute(f"SELECT id, rating_short FROM users WHERE discord_user_id = {ctx.author.id}")
+        self.mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id = {ctx.author.id}")
         user = self.mycurs.fetchone()
         if not user:
+            if Verified in ctx.author.roles:
+               await ctx.author.edit(roles=[Verified,Guest])
+            else:
+                await ctx.author.edit(roles=[])
             await ctx.send(
-                "You are not in our database, please link your discord account in your dashboard at www.czvr.ca")
+                f"{ctx.author.nick}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
             return
 
-        await self.update_user_rating(ctx, ctx.author, user[1])
+        await ctx.author.add_roles(Verified)
+        await self.update_user_rating(ctx, ctx.author, user[2])
 
         self.mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
         status = self.mycurs.fetchone()
-        await self.update_user_type(ctx, ctx.author, status[0])
+        self.mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
+        instructor = self.mycurs.fetchone()
+        await self.update_user_type(ctx, ctx.author, status[0], instructor[0])
+        await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
+
+        if ctx.author.nick:
+            name = ctx.author.nick
+        else:
+            name = ctx.author.name
+
+        await ctx.send(f"{name}, great news! Your roles are now up to date!")
 
         print(f"Completed updating all roles for {ctx.author.name}\n")
 
@@ -53,19 +70,30 @@ class Updater(commands.Cog):
     async def updateall(self, ctx):
         print(f"Updating all roles for all users")
         """Used to update roles for all users"""
-        users = self.get_users_data()
-        for user in users:
-            member = ctx.guild.get_member(user[2])
-            await self.update_user_rating(ctx, member, user[1])
-            self.mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
-            status = self.mycurs.fetchone()
-            await self.update_user_type(ctx, member, status[0])
+        # users = self.get_users_data()
+        # for user in users:
+        #     member = ctx.guild.get_member(user[1])
+        #     await self.update_user_rating(ctx, member, user[2])
+        #     self.mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
+        #     status = self.mycurs.fetchone()
+        #     self.mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
+        #     instructor = self.mycurs.fetchone()
+        #     await self.update_user_type(ctx, member, status[0], instructor[0])
+        #     await self.set_nickname(ctx, member, user[5], user[6], user[0], user[3], user[4])
+
+        for member in ctx.guild.members:
+            if member.bot:
+                pass
+            else:
+                ctx.author = member
+                await self.updateroles(ctx)
+
 
         print("Completed updating all user roles\n")
 
     def get_users_data(self):
 
-        self.mycurs.execute("SELECT id, rating_short, discord_user_id FROM users WHERE discord_user_id IS NOT NULL")
+        self.mycurs.execute("SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id IS NOT NULL")
 
         result = self.mycurs.fetchall()
         return result
@@ -109,19 +137,23 @@ class Updater(commands.Cog):
                 await member.add_roles(I3)
                 print(f"Giving Role I3 to {member.name}")
 
-    async def update_user_type(self, ctx, member: discord.Member, status):
+    async def update_user_type(self, ctx, member: discord.Member, status, instructor):
         # Takes in database info to add home, visiting, and instructor roles
         Home = ctx.guild.get_role(1057798306614485093)
         Visit = ctx.guild.get_role(1057798314592043110)
         Instructor = ctx.guild.get_role(1057798317653897236)
         Guest = ctx.guild.get_role(1057798557811355810)
+        Mentor = ctx.guild.get_role(1057871764002177116)
 
-        await member.remove_roles(Home, Visit, Instructor, Guest)
+        await member.remove_roles(Home, Visit, Instructor, Guest, Mentor)
 
         match status:
             case 'home':
                 await member.add_roles(Home)
                 print(f"Giving Role {Home.name} to {member.name}")
+                if instructor == 0:
+                    await member.add_roles(Mentor)
+                    print(f"Giving Role {Mentor.name} to {member.name}")
 
             case 'visit':
                 await member.add_roles(Visit)
@@ -135,3 +167,16 @@ class Updater(commands.Cog):
 
             case _:
                 await member.add_roles(Guest)
+
+
+    async def set_nickname(self, ctx, member: discord.Member, fname, lname, cid, cid_only, fullname):
+
+        if member == ctx.guild.owner:
+            return
+
+        if cid_only:
+            await member.edit(nick=str(cid))
+        elif not fullname:
+            await member.edit(nick=f"{fname} - {cid}")
+        else:
+            await member.edit(nick=f"{fname} {lname} - {cid}")

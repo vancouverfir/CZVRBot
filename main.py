@@ -54,6 +54,8 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send('```You do not have the permissions required to use this command```')
 
+    elif isinstance(error, commands.CommandNotFound):
+        await ctx.send('```you bad at type```')
 
 async def main():
     await loadallcogs()
