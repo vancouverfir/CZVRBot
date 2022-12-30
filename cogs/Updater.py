@@ -39,15 +39,18 @@ class Updater(commands.Cog):
 
         mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id = {ctx.author.id}")
         user = mycurs.fetchone()
+        #commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
         if not user:
-            if Verified in ctx.author.roles:
-               await ctx.author.edit(roles=[Verified,Guest])
-            else:
-                await ctx.author.edit(roles=[])
-            if ctx.command.name == 'updateroles':
-                await ctx.send(
-                f"{ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
             return
+        #if not user:
+        #    if Verified in ctx.author.roles:
+        #       await ctx.author.edit(roles=[Verified,Guest])
+        #    else:
+        #        await ctx.author.edit(roles=[])
+        #    if ctx.command.name == 'updateroles':
+        #        await ctx.send(
+        #        f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
+        #    return
 
         await ctx.author.add_roles(Verified)
         await self.update_user_rating(ctx, ctx.author, user[2])
@@ -60,7 +63,7 @@ class Updater(commands.Cog):
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
 
         if ctx.command.name == 'updateroles':
-            await ctx.send(f"{ctx.author.mention}, great news! Your roles are now up to date!")
+            await ctx.send(f"{ctx.author.mention}, chirp! Your roles are now up to date!")
 
         mycurs.close()
 
