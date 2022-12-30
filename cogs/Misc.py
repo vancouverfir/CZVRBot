@@ -19,7 +19,9 @@ class Misc(commands.Cog):
     
     @commands.command()
     async def joinczvr(self, ctx):
-        await ctx.send("```To join the CZVR FIR you will need to first be a member of VATCAN and have your S1 Rating.\n\nYou can request a transfer by following the steps here: https://czvr.ca/join. \n\nOnce accepted you will receive a email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n*NOTE: I highly recomend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter*\n\n**... I mean SQUAWK.**```")
+        embed = discord.Embed()
+        embed.add_field(name="How To Join", value="To join the CZVR FIR you will need to first be a member of VATCAN and have your S1 Rating. You can request a transfer by following the steps here: https://czvr.ca/join. Once accepted you will receive a email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n\n*NOTE: I highly recomend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter* \n\n**... I mean SQUAWK.**", inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def link(self, ctx):
