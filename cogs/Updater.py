@@ -45,6 +45,7 @@ class Updater(commands.Cog):
                f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
            return
 
+        await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
         await ctx.author.add_roles(Verified)
         await self.update_user_rating(ctx, ctx.author, user[2])
 
@@ -53,7 +54,7 @@ class Updater(commands.Cog):
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
         await self.update_user_type(ctx, ctx.author, status[0], instructor)
-        await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
+
 
         if ctx.command.name == 'updateroles':
             await ctx.send(f"{ctx.author.mention}, chirp! Your roles are now up to date!")
