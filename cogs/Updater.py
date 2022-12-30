@@ -42,7 +42,7 @@ class Updater(commands.Cog):
            #     await ctx.author.edit(roles=[])
            if ctx.command.name == 'updateroles':
                await ctx.send(
-               f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
+               f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca")
            return
 
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
