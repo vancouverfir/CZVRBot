@@ -141,7 +141,7 @@ class Updater(commands.Cog):
             case 'I3':
                 await member.add_roles(I3)
                 print(f"Giving Role I3 to {member.nick}")
-        await self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1])
+                await self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1])
 
     async def update_user_type(self, ctx, member: discord.Member, status, instructor):
         # Takes in database info to add home, visiting, and instructor roles
