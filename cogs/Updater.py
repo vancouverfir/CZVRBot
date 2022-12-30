@@ -17,29 +17,17 @@ class Updater(commands.Cog):
         self.client = client
         load_dotenv()
 
-        dbhost = os.getenv('DB-HOST')
-        dbuser = os.getenv('DB-USER')
-        dbpass = os.getenv('DB-PASS')
-        dbname = os.getenv('DB-NAME')
-
-
-        try:
-            db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
-        except mariadb.Error as e:
-            print(f"Error connecting to MariaDB Platform: {e}")
-        else:
-            self.mycurs = db.cursor()
 
     @commands.command()
     async def updateroles(self, ctx):
 
-        #verifiedRole = os.getenv('VERIFIED-ROLE')
-       #guestRole = os.getenv('GUEST-ROLE')
+        verifiedRole = int(os.getenv('VERIFIED-ROLE'))
+        guestRole = int(os.getenv('GUEST-ROLE'))
 
 
         print(f"Updating roles for {ctx.author.name}")
-        Verified = ctx.guild.get_role(711231839888736316)
-        Guest = ctx.guild.get_role(711234526717804635)
+        Verified = ctx.guild.get_role(verifiedRole)
+        Guest = ctx.guild.get_role(guestRole)
         """Updates roles for a single user"""
 
         mycurs = self.database_connect()
@@ -48,16 +36,14 @@ class Updater(commands.Cog):
         user = mycurs.fetchone()
         #commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
         if not user:
-            return
-        #if not user:
-        #    if Verified in ctx.author.roles:
-        #       await ctx.author.edit(roles=[Verified,Guest])
-        #    else:
-        #        await ctx.author.edit(roles=[])
-        #    if ctx.command.name == 'updateroles':
-        #        await ctx.send(
-        #        f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
-        #    return
+           # if Verified in ctx.author.roles:
+           #    await ctx.author.edit(roles=[Verified,Guest])
+           # else:
+           #     await ctx.author.edit(roles=[])
+           if ctx.command.name == 'updateroles':
+               await ctx.send(
+               f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at www.czvr.ca")
+           return
 
         await ctx.author.add_roles(Verified)
         await self.update_user_rating(ctx, ctx.author, user[2])
@@ -66,7 +52,7 @@ class Updater(commands.Cog):
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
-        await self.update_user_type(ctx, ctx.author, status[0], instructor[0])
+        await self.update_user_type(ctx, ctx.author, status[0], instructor)
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
 
         if ctx.command.name == 'updateroles':
@@ -114,21 +100,21 @@ class Updater(commands.Cog):
 
     async def update_user_rating(self, ctx, member: discord.Member, rating):
 
-        #s1Role = os.getenv('S1-ROLE')
-        #s2Role = os.getenv('S2-ROLE')
-        #s3Role = os.getenv('S3-ROLE')
-        #c1Role = os.getenv('C1-ROLE')
-        #c3Role = os.getenv('C3-ROLE')
-        #i1Role = os.getenv('I1-ROLE')
-        #i3Role = os.getenv('I3-ROLE')
+        s1Role = int(os.getenv('S1-ROLE'))
+        s2Role = int(os.getenv('S2-ROLE'))
+        s3Role = int(os.getenv('S3-ROLE'))
+        c1Role = int(os.getenv('C1-ROLE'))
+        c3Role = int(os.getenv('C3-ROLE'))
+        i1Role = int(os.getenv('I1-ROLE'))
+        i3Role = int(os.getenv('I3-ROLE'))
 
-        S1 = ctx.guild.get_role(700521531461337219)
-        S2 = ctx.guild.get_role(700521574662406145)
-        S3 = ctx.guild.get_role(700521600969211914)
-        C1 = ctx.guild.get_role(711240646740017163)
-        C3 = ctx.guild.get_role(700521636608344094)
-        I1 = ctx.guild.get_role(700521664294682675)
-        I3 = ctx.guild.get_role(711240660103200819)
+        S1 = ctx.guild.get_role(s1Role)
+        S2 = ctx.guild.get_role(s2Role)
+        S3 = ctx.guild.get_role(s3Role)
+        C1 = ctx.guild.get_role(c1Role)
+        C3 = ctx.guild.get_role(c3Role)
+        I1 = ctx.guild.get_role(i1Role)
+        I3 = ctx.guild.get_role(i3Role)
 
         await member.remove_roles(S1, S2, S3, C1, C3, I1, I3)
         match rating:
@@ -163,17 +149,17 @@ class Updater(commands.Cog):
     async def update_user_type(self, ctx, member: discord.Member, status, instructor):
         # Takes in database info to add home, visiting, and instructor roles
 
-        #homeRole = os.getenv('HOME-ROLE')
-        #visitorRole = os.getenv('VISITOR-ROLE')
-        #guestRole = os.getenv('GUEST-ROLE')
-        #mentorRole = os.getenv('MENTOR-ROLE')
-        #instructorRole = os.getenv('INSTRUCTOR-ROLE')
+        homeRole = int(os.getenv('HOME-ROLE'))
+        visitorRole = int(os.getenv('VISITOR-ROLE'))
+        guestRole = int(os.getenv('GUEST-ROLE'))
+        mentorRole = int(os.getenv('MENTOR-ROLE'))
+        instructorRole = int(os.getenv('INSTRUCTOR-ROLE'))
 
-        Home = ctx.guild.get_role(720782657516077126)
-        Visit = ctx.guild.get_role(711231839888736316)
-        Instructor = ctx.guild.get_role(714650622690983986)
-        Guest = ctx.guild.get_role(711234526717804635)
-        Mentor = ctx.guild.get_role(711236245249851396)
+        Home = ctx.guild.get_role(homeRole)
+        Visit = ctx.guild.get_role(visitorRole)
+        Instructor = ctx.guild.get_role(instructorRole)
+        Guest = ctx.guild.get_role(guestRole)
+        Mentor = ctx.guild.get_role(mentorRole)
 
         await member.remove_roles(Home, Visit, Instructor, Guest, Mentor)
 
@@ -181,9 +167,15 @@ class Updater(commands.Cog):
             case 'home':
                 await member.add_roles(Home)
                 print(f"Giving Role {Home.name} to {member.name}")
-                if instructor == 0:
+                if instructor == None:
+                    return
+                elif instructor[0] == 0:
                     await member.add_roles(Mentor)
                     print(f"Giving Role {Mentor.name} to {member.name}")
+
+                elif instructor[0] == 1:
+                    await member.add_roles(Instructor)
+                    print(f"Giving Role {Instructor.name} to {member.name}")
 
             case 'visit':
                 await member.add_roles(Visit)
@@ -197,6 +189,8 @@ class Updater(commands.Cog):
 
             case _:
                 await member.add_roles(Guest)
+
+
 
 
     async def set_nickname(self, ctx, member: discord.Member, fname, lname, cid, cid_only, fullname):
