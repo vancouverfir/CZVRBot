@@ -6,6 +6,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 
+
 async def setup(client):
     await client.add_cog(Updater(client))
 
@@ -21,6 +22,7 @@ class Updater(commands.Cog):
         dbpass = os.getenv('DB-PASS')
         dbname = os.getenv('DB-NAME')
 
+
         try:
             db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
         except mariadb.Error as e:
@@ -30,9 +32,14 @@ class Updater(commands.Cog):
 
     @commands.command()
     async def updateroles(self, ctx):
+
+        #verifiedRole = os.getenv('VERIFIED-ROLE')
+       #guestRole = os.getenv('GUEST-ROLE')
+
+
         print(f"Updating roles for {ctx.author.name}")
-        Verified = ctx.guild.get_role(1057895094495215719)
-        Guest = ctx.guild.get_role(1057798557811355810)
+        Verified = ctx.guild.get_role(711231839888736316)
+        Guest = ctx.guild.get_role(711234526717804635)
         """Updates roles for a single user"""
 
         mycurs = self.database_connect()
@@ -106,13 +113,22 @@ class Updater(commands.Cog):
     #     return result
 
     async def update_user_rating(self, ctx, member: discord.Member, rating):
-        S1 = ctx.guild.get_role(1057518699000627210)
-        S2 = ctx.guild.get_role(765205927019806800)
-        S3 = ctx.guild.get_role(765205897873719306)
-        C1 = ctx.guild.get_role(765205868421185597)
-        C3 = ctx.guild.get_role(765205815337549834)
-        I1 = ctx.guild.get_role(1057761149929652265)
-        I3 = ctx.guild.get_role(1057761172427915325)
+
+        #s1Role = os.getenv('S1-ROLE')
+        #s2Role = os.getenv('S2-ROLE')
+        #s3Role = os.getenv('S3-ROLE')
+        #c1Role = os.getenv('C1-ROLE')
+        #c3Role = os.getenv('C3-ROLE')
+        #i1Role = os.getenv('I1-ROLE')
+        #i3Role = os.getenv('I3-ROLE')
+
+        S1 = ctx.guild.get_role(700521531461337219)
+        S2 = ctx.guild.get_role(700521574662406145)
+        S3 = ctx.guild.get_role(700521600969211914)
+        C1 = ctx.guild.get_role(711240646740017163)
+        C3 = ctx.guild.get_role(700521636608344094)
+        I1 = ctx.guild.get_role(700521664294682675)
+        I3 = ctx.guild.get_role(711240660103200819)
 
         await member.remove_roles(S1, S2, S3, C1, C3, I1, I3)
         match rating:
@@ -146,11 +162,18 @@ class Updater(commands.Cog):
 
     async def update_user_type(self, ctx, member: discord.Member, status, instructor):
         # Takes in database info to add home, visiting, and instructor roles
-        Home = ctx.guild.get_role(1057798306614485093)
-        Visit = ctx.guild.get_role(1057798314592043110)
-        Instructor = ctx.guild.get_role(1057798317653897236)
-        Guest = ctx.guild.get_role(1057798557811355810)
-        Mentor = ctx.guild.get_role(1057871764002177116)
+
+        #homeRole = os.getenv('HOME-ROLE')
+        #visitorRole = os.getenv('VISITOR-ROLE')
+        #guestRole = os.getenv('GUEST-ROLE')
+        #mentorRole = os.getenv('MENTOR-ROLE')
+        #instructorRole = os.getenv('INSTRUCTOR-ROLE')
+
+        Home = ctx.guild.get_role(720782657516077126)
+        Visit = ctx.guild.get_role(711231839888736316)
+        Instructor = ctx.guild.get_role(714650622690983986)
+        Guest = ctx.guild.get_role(711234526717804635)
+        Mentor = ctx.guild.get_role(711236245249851396)
 
         await member.remove_roles(Home, Visit, Instructor, Guest, Mentor)
 
