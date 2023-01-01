@@ -13,7 +13,7 @@ token = os.getenv('BOT-TOKEN')
 intents = discord.Intents.all()
 intents.message_content = True
 
-client = client = commands.Bot(command_prefix='~', intents=intents)
+client = client = commands.Bot(command_prefix='~', intents=intents, case_insensitive=True)
 
 
 @client.event

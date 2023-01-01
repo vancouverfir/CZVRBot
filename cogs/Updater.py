@@ -52,7 +52,7 @@ class Updater(commands.Cog):
 
         mycurs = self.database_connect()
 
-        mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id = {ctx.author.id}")
+        mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname, permissions FROM users WHERE discord_user_id = {ctx.author.id}")
         user = mycurs.fetchone()
         #commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
         if not user:
@@ -67,13 +67,16 @@ class Updater(commands.Cog):
 
         await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
         await ctx.author.add_roles(Verified)
-        await self.update_user_rating(ctx, ctx.author, user[2])
+        if user[7] > 0:
+            await self.update_user_rating(ctx, ctx.author, user[2])
+
+
 
         mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
-        await self.update_user_type(ctx, ctx.author, status[0], instructor)
+        await self.update_user_type(ctx, ctx.author, status, instructor)
 
 
         if ctx.command.name == 'updateroles':
@@ -181,7 +184,14 @@ class Updater(commands.Cog):
 
         # await member.remove_roles(Home, Visit, Instructor, Guest, Mentor)
 
-        match status:
+        if status == None:
+            await member.add_roles(Guest)
+            print(f"Giving Role {Guest.name} to {member.nick}")
+            await self.remove_excess_roles(member, [Home, Visit, Instructor, Mentor])
+            return
+
+
+        match status[0]:
             case 'home':
                 await member.add_roles(Home)
                 print(f"Giving Role {Home.name} to {member.nick}")
@@ -210,10 +220,7 @@ class Updater(commands.Cog):
                 print(f"Giving Role {Instructor.name} to {member.nick}")
                 await self.remove_excess_roles(member,[Visit, Guest, Mentor])
 
-            case _:
-                await member.add_roles(Guest)
-                print(f"Giving Role {Guest.name} to {member.nick}")
-                await self.remove_excess_roles(member,[Home,Visit,Instructor,Mentor])
+
 
 
 
