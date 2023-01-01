@@ -45,50 +45,13 @@ class Updater(commands.Cog):
 
     @commands.command()
     async def updateroles(self, ctx):
-
-        verifiedRole = int(os.getenv('VERIFIED-ROLE'))
-        guestRole = int(os.getenv('GUEST-ROLE'))
-
-
         print(f"Updating roles for {ctx.author.nick}")
-        Verified = ctx.guild.get_role(verifiedRole)
-        Guest = ctx.guild.get_role(guestRole)
-        """Updates roles for a single user"""
+        roleupdate = await self.role_updater(ctx.author, ctx.guild)
 
-        mycurs = self.database_connect()
-
-        mycurs.execute(f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname, permissions FROM users WHERE discord_user_id = {ctx.author.id}")
-        user = mycurs.fetchone()
-        #commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
-        if not user:
-           # if Verified in ctx.author.roles:
-           #    await ctx.author.edit(roles=[Verified,Guest])
-           # else:
-           #     await ctx.author.edit(roles=[])
-           if ctx.command.name == 'updateroles':
-               await ctx.send(
-               f"CHIRP!!, {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca")
-           return
-
-        await self.set_nickname(ctx, ctx.author, user[5], user[6], user[0], user[3], user[4])
-        await ctx.author.add_roles(Verified)
-        if user[7] > 0:
-            await self.update_user_rating(ctx, ctx.author, user[2])
-
-
-
-        mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
-        status = mycurs.fetchone()
-        mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
-        instructor = mycurs.fetchone()
-        await self.update_user_type(ctx, ctx.author, status, instructor)
-
-
-        if ctx.command.name == 'updateroles':
+        if roleupdate == 0:
+            await ctx.send(f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca")
+        else:
             await ctx.send(f"{ctx.author.mention}, chirp! Your roles are now up to date!")
-
-        mycurs.close()
-
         print(f"Completed updating all roles for {ctx.author.nick}\n")
 
     @commands.command()
@@ -98,26 +61,33 @@ class Updater(commands.Cog):
         """Used to update roles for all users"""
 
         for member in ctx.guild.members:
-            if member.bot:
-                pass
+            if not member.bot:
+                print(f"Updating roles for {member.nick}")
+                await self.role_updater(member, ctx.guild)
+                print(f"Completed updating all roles for {member.nick}\n")
             else:
-                ctx.author = member
-                await self.updateroles(ctx)
-
+                pass
 
         await ctx.send("All roles have been updated")
         print("Completed updating all user roles\n")
 
-    # def get_users_data(self):
-    #
-    #     mycurs = self.database_connect()
-    #
-    #     mycurs.execute("SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname FROM users WHERE discord_user_id IS NOT NULL")
-    #
-    #     result = mycurs.fetchall()
-    #     return result
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        print(f"{member} has joined the server")
+        roleupdate = await self.role_updater(member, member.guild)
+        print(f"Completed updating all roles for {member.nick}\n")
 
-    async def update_user_rating(self, ctx, member: discord.Member, rating):
+        dm = member.dm_channel
+        if dm == None:
+            dm = await member.create_dm()
+
+        if roleupdate == 0:
+            await dm.send(
+                f"CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca, then run ~updateroles in #introduce-yourself to be assigned your roles")
+        else:
+            await dm.send(f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!")
+
+    async def update_user_rating(self, guild, member: discord.Member, rating):
 
         s1Role = int(os.getenv('S1-ROLE'))
         s2Role = int(os.getenv('S2-ROLE'))
@@ -127,13 +97,13 @@ class Updater(commands.Cog):
         i1Role = int(os.getenv('I1-ROLE'))
         i3Role = int(os.getenv('I3-ROLE'))
 
-        S1 = ctx.guild.get_role(s1Role)
-        S2 = ctx.guild.get_role(s2Role)
-        S3 = ctx.guild.get_role(s3Role)
-        C1 = ctx.guild.get_role(c1Role)
-        C3 = ctx.guild.get_role(c3Role)
-        I1 = ctx.guild.get_role(i1Role)
-        I3 = ctx.guild.get_role(i3Role)
+        S1 = guild.get_role(s1Role)
+        S2 = guild.get_role(s2Role)
+        S3 = guild.get_role(s3Role)
+        C1 = guild.get_role(c1Role)
+        C3 = guild.get_role(c3Role)
+        I1 = guild.get_role(i1Role)
+        I3 = guild.get_role(i3Role)
 
         # await member.remove_roles(S1, S2, S3, C1, C3, I1, I3)
         match rating:
@@ -172,7 +142,7 @@ class Updater(commands.Cog):
                 print(f"Giving Role I3 to {member.nick}")
                 await self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1])
 
-    async def update_user_type(self, ctx, member: discord.Member, status, instructor):
+    async def update_user_type(self, guild, member: discord.Member, status, instructor):
         # Takes in database info to add home, visiting, and instructor roles
 
         homeRole = int(os.getenv('HOME-ROLE'))
@@ -181,11 +151,11 @@ class Updater(commands.Cog):
         mentorRole = int(os.getenv('MENTOR-ROLE'))
         instructorRole = int(os.getenv('INSTRUCTOR-ROLE'))
 
-        Home = ctx.guild.get_role(homeRole)
-        Visit = ctx.guild.get_role(visitorRole)
-        Instructor = ctx.guild.get_role(instructorRole)
-        Guest = ctx.guild.get_role(guestRole)
-        Mentor = ctx.guild.get_role(mentorRole)
+        Home = guild.get_role(homeRole)
+        Visit = guild.get_role(visitorRole)
+        Instructor = guild.get_role(instructorRole)
+        Guest = guild.get_role(guestRole)
+        Mentor = guild.get_role(mentorRole)
 
         # await member.remove_roles(Home, Visit, Instructor, Guest, Mentor)
 
@@ -230,9 +200,9 @@ class Updater(commands.Cog):
 
 
 
-    async def set_nickname(self, ctx, member: discord.Member, fname, lname, cid, cid_only, fullname):
+    async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
 
-        if member == ctx.guild.owner:
+        if member == guild.owner:
             return
 
         if cid_only:
@@ -266,3 +236,36 @@ class Updater(commands.Cog):
 
 
 
+    async def role_updater(self, member, guild):
+        verifiedRole = int(os.getenv('VERIFIED-ROLE'))
+        guestRole = int(os.getenv('GUEST-ROLE'))
+
+        Verified = guild.get_role(verifiedRole)
+        Guest = guild.get_role(guestRole)
+        """Updates roles for a single user"""
+
+        mycurs = self.database_connect()
+
+        mycurs.execute(
+            f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname, permissions FROM users WHERE discord_user_id = {member.id}")
+        user = mycurs.fetchone()
+        # commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
+        if not user:
+            # if Verified in member.roles:
+            #    await member.edit(roles=[Verified,Guest])
+            # else:
+            #     await member.edit(roles=[])
+            return 0
+
+        await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
+        await member.add_roles(Verified)
+        if user[7] > 0:
+            await self.update_user_rating(guild, member, user[2])
+
+        mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
+        status = mycurs.fetchone()
+        mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
+        instructor = mycurs.fetchone()
+        await self.update_user_type(guild, member, status, instructor)
+
+        mycurs.close()

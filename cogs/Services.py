@@ -2,7 +2,9 @@ import sys
 
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 import os
+import cogs.Updater as Updater
 
 version = '```Beta 0.3```'
 
@@ -13,10 +15,6 @@ class Service(commands.Cog):
         self.client = client
 
     # Events
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        print(f"{member} has joined the server")
-
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         print(f"{member} has left the server")
