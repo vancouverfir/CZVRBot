@@ -7,7 +7,6 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 
-
 async def setup(client):
     await client.add_cog(Updater(client))
 
@@ -20,23 +19,29 @@ class Updater(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
-    async def autoroleupdate(self, ctx):
+    async def startautoroleupdate(self, ctx):
+        global stopTimer
         stopTimer = False
-        while True:
-            if stopTimer:
-                break
-            print("starting autoupdater...")
-            await asyncio.sleep(1*60)
-            print("Updating all roles on timer...")
-            await self.updateall(ctx)
+        await self.autoroleupdate(ctx)
     
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def stopautoroleupdate(self, ctx):
         global stopTimer
         stopTimer = True
-        print ("stopping auto updater")
-    
+        
+
+    async def autoroleupdate(self, ctx):
+        while True:
+            await asyncio.sleep(10)
+            if stopTimer is True:
+                print ("stopping auto updater")
+                break
+            else:
+                print("starting autoupdater...")
+            print("Updating all roles on timer...")
+            await self.updateall(ctx)
+
 
     @commands.command()
     async def updateroles(self, ctx):
