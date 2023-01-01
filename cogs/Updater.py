@@ -1,5 +1,6 @@
 import os
 
+import asyncio
 import discord
 import mariadb as mariadb
 from discord.ext import commands
@@ -17,6 +18,25 @@ class Updater(commands.Cog):
         self.client = client
         load_dotenv()
 
+    @commands.command()
+    @commands.has_permissions(manage_roles=True)
+    async def autoroleupdate(self, ctx):
+        stopTimer = False
+        while True:
+            if stopTimer:
+                break
+            print("starting autoupdater...")
+            await asyncio.sleep(1*60)
+            print("Updating all roles on timer...")
+            await self.updateall(ctx)
+    
+    @commands.command()
+    @commands.has_permissions(manage_roles=True)
+    async def stopautoroleupdate(self, ctx):
+        global stopTimer
+        stopTimer = True
+        print ("stopping auto updater")
+    
 
     @commands.command()
     async def updateroles(self, ctx):
@@ -231,4 +251,6 @@ class Updater(commands.Cog):
             if role in member.roles:
                 await member.remove_roles(role)
                 print(f"Removing Role {role.name} to {member.nick}")
+
+
 
