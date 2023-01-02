@@ -16,6 +16,7 @@ class Waitlist(commands.Cog):
     
     @commands.command()
     async def waitlist(self, ctx):
+        """Checks your position on the waitlist"""
         mycurs = self.database_connect()
 
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {ctx.author.id}")
@@ -34,16 +35,10 @@ class Waitlist(commands.Cog):
         for position, person in enumerate(waitlist):
             if user[0] == person[0]:
 
-                await ctx.send(embed=discord.Embed(description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMakesure you have emails from @vatcan.ca and @czvr.ca witelisted in your spam filter!!"))
+                await ctx.send(embed=discord.Embed(description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!"))
                 return
 
         await ctx.send(embed=discord.Embed(description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
-
-
-                
-
-
-
 
 
     def database_connect(self):
@@ -61,9 +56,6 @@ class Waitlist(commands.Cog):
             mycurs = db.cursor()
             return mycurs
 
-
-
-    
 
 async def setup(client):
     await client.add_cog(Waitlist(client))
