@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 import cogs.Updater as Updater
 
-version = '```Beta 0.3```'
+version = '```V1.0.0```'
 
 
 class Service(commands.Cog):

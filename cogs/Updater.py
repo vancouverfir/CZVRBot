@@ -33,7 +33,7 @@ class Updater(commands.Cog):
 
     async def autoroleupdate(self, ctx):
         while True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(1*60*60)
             if stopTimer is True:
                 print ("stopping auto updater")
                 break
