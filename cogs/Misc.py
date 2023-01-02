@@ -72,18 +72,19 @@ class Misc(commands.Cog):
         location = data['data'][0]['station']['location']
         time = data['data'][0]['observed'][-6:]
 
-        # Format the information into a message to send to the channel
-        # info_message = (
-        #     f"Airport: {airport_name}\n"
-        #     f"METAR: {metar}\n"
-        #     f"Clouds: {clouds}\n"
-        #     f"Temperature: {temperature}°C\n"
-        #     f"Dewpoint: {dewpoint}°C\n"
-        #     f"Wind Speed: {wind_speed} knots\n"
-        #     f"Wind Direction: {wind_direction}°"
-        # )
+        match flight_condition:
+            case 'VFR':
+                colour = 0x6CC24A
+            case 'MVFR':
+                colour = 0xB2D33C
+            case 'IFR':
+                colour = 0xE3B031
+            case 'LIFR':
+                colour = 0xF15025
+            case _:
+                colour = 0x000000
 
-        embed = discord.Embed(title=airport_name, description=metar)
+        embed = discord.Embed(title=airport_name, description=metar, colour=colour)
         # embed.add_field(name="Clouds", value=clouds)
         embed.add_field(name="Flight Conditions", value=flight_condition)
         embed.add_field(name="Altimeter", value=altimeter)
