@@ -23,18 +23,18 @@ class Service(commands.Cog):
     @commands.command(aliases=['p'])
     async def ping(self, ctx):
         """Checks the bot's ping"""
-        await ctx.send(f"```Pong! \n{self.client.latency}s```")
+        await ctx.send(embed=discord.Embed(title="Pong!",description=f"```{self.client.latency} seconds```"))
 
     @commands.command(aliases=['v'])
     async def version(self, ctx):
         """Checks the bot's version"""
-        await ctx.send('```The current version is:```' + version)
+        await ctx.send(embed=discord.Embed(title="Version",description=f"The current version is {version}"))
 
     @commands.command(aliases=['logoff', 'lo'])
     @commands.has_permissions(administrator=True)
     async def logout(self, ctx):
         """Takes the bot offline"""
-        await ctx.send("```See ya!```")
+        await ctx.send(embed=discord.Embed(title="See Ya!",description="It's my time to go! I'm outta here!"))
         await self.client.close()
         sys.exit()
 

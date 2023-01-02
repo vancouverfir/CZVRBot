@@ -23,8 +23,7 @@ class Waitlist(commands.Cog):
         user = mycurs.fetchone()
 
         if not user:
-            await ctx.send(
-               f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca")
+            await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca",colour = 0xF23131))
             return
 
         mycurs.execute("SELECT user_id FROM students WHERE status = 0")
@@ -35,10 +34,10 @@ class Waitlist(commands.Cog):
         for position, person in enumerate(waitlist):
             if user[0] == person[0]:
 
-                await ctx.send(embed=discord.Embed(description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!"))
+                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!"))
                 return
 
-        await ctx.send(embed=discord.Embed(description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
+        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
 
 
     def database_connect(self):

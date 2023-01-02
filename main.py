@@ -49,13 +49,13 @@ async def loadallcogs():
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send('```Beep, You forgot to include a required argument```')
+        await ctx.send(embed=discord.Embed(title="Missing Requirements",description='```Beep, You forgot to include a required argument```',colour = 0xF23131))
 
     elif isinstance(error, commands.MissingPermissions):
-        await ctx.send('```CHIRP!! You do not have the permissions required to use this command```')
+        await ctx.send(embed=discord.Embed(title="Missing Permissions",description='```CHIRP!! You do not have the permissions required to use this command```',colour = 0xF23131))
 
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.send('```sad mochi noises```')
+        await ctx.send(embed=discord.Embed(title="Unknown Command",description='```sad mochi noises```',colour = 0xF23131))
 
 async def main():
     await loadallcogs()

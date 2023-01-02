@@ -20,7 +20,7 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, mem: discord.Member, *, reason=None):
         """Used to kick members"""
         await mem.kick(reason=reason)
-        await ctx.send(f'Kicked {mem.mention}')
+        await ctx.send( f'Kicked {mem.mention}')
         print(f"Kicked {mem.name}\n")
 
     @commands.command(aliases=['b'])

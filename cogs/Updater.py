@@ -49,9 +49,9 @@ class Updater(commands.Cog):
         roleupdate = await self.role_updater(ctx.author, ctx.guild)
 
         if roleupdate == 0:
-            await ctx.send(f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca")
+            await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca"))
         else:
-            await ctx.send(f"{ctx.author.mention}, chirp! Your roles are now up to date!")
+            await ctx.send(embed=discord.Embed(title="Your roles have been updated!", description=f"{ctx.author.mention}, chirp! Your roles are now up to date!"))
         print(f"Completed updating all roles for {ctx.author.nick}\n")
 
     @commands.command()
@@ -68,7 +68,7 @@ class Updater(commands.Cog):
             else:
                 pass
 
-        await ctx.send("All roles have been updated")
+        await ctx.send(embed=discord.Embed(title="All roles have been updated",description="The roles of all users were updated successfully!"))
         print("Completed updating all user roles\n")
 
     @commands.Cog.listener()
@@ -82,10 +82,9 @@ class Updater(commands.Cog):
             dm = await member.create_dm()
 
         if roleupdate == 0:
-            await dm.send(
-                f"CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca, then run ~updateroles in #introduce-yourself to be assigned your roles")
+            await dm.send(embed=discord.Embed( title="You're not in our database!", description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca, then run ~updateroles in #introduce-yourself to be assigned your roles",colour = 0xF23131))
         else:
-            await dm.send(f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!")
+            await dm.send(embed=discord.Embed( title="Welcome! Your roles have been assigned!", description=f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!"))
 
     async def update_user_rating(self, guild, member: discord.Member, rating):
 
