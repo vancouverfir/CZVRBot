@@ -6,9 +6,7 @@ from discord.ext import commands
 from discord.utils import get
 from dotenv import load_dotenv
 
-wList = []
-
-class Waitlist(commands.Cog):
+class Website(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -39,6 +37,34 @@ class Waitlist(commands.Cog):
 
         await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
 
+    @commands.command()
+    async def currency(self, ctx):
+        '''Gets your currency hours'''
+
+        mycurs = self.database_connect()
+
+        mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {ctx.author.id}")
+        user = mycurs.fetchone()
+
+        if not user:
+            await ctx.send(embed=discord.Embed(title="You're not in our database!",
+                                               description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca",
+                                               colour=0xF23131))
+            return
+
+        mycurs.execute(f"SELECT currency FROM roster WHERE cid = {user[0]}")
+        hours = mycurs.fetchone()
+
+        if not hours:
+            await ctx.send(embed=discord.Embed(title="You're not a Vancouver",
+                                               description=f"CHIRP!! {ctx.author.mention}, it doesn't look like you are a home or visiting controller, so you have no hours in CZVR. If you are interested in become a CZVR controller do ~joinczvr. If you are interested in visiting CZVR submit a visiting request through vatcan.ca",
+                                               colour=0xF23131))
+            return
+
+        if hours[0] == None:
+            hours = [0.0]
+
+        await ctx.send(embed=discord.Embed(title=f"Your currency is {hours[0]} hours!"))
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')
@@ -57,4 +83,4 @@ class Waitlist(commands.Cog):
 
 
 async def setup(client):
-    await client.add_cog(Waitlist(client))
+    await client.add_cog(Website(client))
