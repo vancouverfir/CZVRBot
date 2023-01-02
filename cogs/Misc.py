@@ -46,34 +46,52 @@ class Misc(commands.Cog):
         # Check if the request was successful
         if response.status_code != 200:
             await ctx.send(
+                "Error: Could not connect to our metar service. Try again later.")
+            return
+
+        if data['results'] == 0:
+            await ctx.send(
                 "Error: Could not fetch airport information. Please check the ICAO code and try again.")
             return
 
         # Extract the relevant information from the response
-        airport_name = data['data'][0]['icao']
+        airport_name = data['data'][0]['station']['name']
+        altimeter = data['data'][0]['barometer']['hg']
         metar = data['data'][0]['raw_text']
         clouds = data['data'][0]['clouds']
         temperature = data['data'][0]['temperature']['celsius']
         dewpoint = data['data'][0]['dewpoint']['celsius']
-        wind_speed = data['data'][0]['wind']['speed_kts']
-        wind_direction = data['data'][0]['wind']['degrees']
+        try:
+            wind_speed = data['data'][0]['wind']['speed_kts']
+            wind_direction = data['data'][0]['wind']['degrees']
+        except:
+            wind_speed = '0'
+            wind_direction = '000'
+        visibility = data['data'][0]['visibility']['miles']
+        flight_condition = data['data'][0]['flight_category']
+        location = data['data'][0]['station']['location']
+        time = data['data'][0]['observed'][-6:]
 
         # Format the information into a message to send to the channel
-        info_message = (
-            f"Airport: {airport_name}\n"
-            f"METAR: {metar}\n"
-            f"Clouds: {clouds}\n"
-            f"Temperature: {temperature}°C\n"
-            f"Dewpoint: {dewpoint}°C\n"
-            f"Wind Speed: {wind_speed} knots\n"
-            f"Wind Direction: {wind_direction}°"
-        )
+        # info_message = (
+        #     f"Airport: {airport_name}\n"
+        #     f"METAR: {metar}\n"
+        #     f"Clouds: {clouds}\n"
+        #     f"Temperature: {temperature}°C\n"
+        #     f"Dewpoint: {dewpoint}°C\n"
+        #     f"Wind Speed: {wind_speed} knots\n"
+        #     f"Wind Direction: {wind_direction}°"
+        # )
 
         embed = discord.Embed(title=airport_name, description=metar)
         # embed.add_field(name="Clouds", value=clouds)
-        embed.add_field(name="Temperature", value=f"{temperature}°C")
-        embed.add_field(name="Dewpoint", value=f"{dewpoint}°C")
+        embed.add_field(name="Flight Conditions", value=flight_condition)
+        embed.add_field(name="Altimeter", value=altimeter)
         embed.add_field(name="Wind", value=f"{wind_speed} knots @ {wind_direction}°")
+        embed.add_field(name="Time", value=time)
+        embed.add_field(name="Temperature", value=f"{temperature}°C/{dewpoint}°C")
+        embed.add_field(name="Visibility", value=f"{visibility} SM")
+        embed.set_footer(text=location)
 
         await ctx.send(embed=embed)
 
