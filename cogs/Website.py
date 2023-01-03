@@ -38,8 +38,8 @@ class Website(commands.Cog):
         await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
 
     @commands.command()
-    async def currency(self, ctx):
-        '''Gets your currency hours'''
+    async def monthlyactivity(self, ctx):
+        '''Gets your monthly controlling hours'''
 
         mycurs = self.database_connect()
 
@@ -64,7 +64,7 @@ class Website(commands.Cog):
         if hours[0] == None:
             hours = [0.0]
 
-        await ctx.send(embed=discord.Embed(title=f"Your currency is {hours[0]} hours!"))
+        await ctx.send(embed=discord.Embed(title=f"Your activity this month is {hours[0]} hours!"))
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')
