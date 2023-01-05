@@ -22,6 +22,7 @@ class Updater(commands.Cog):
     async def startautoroleupdate(self, ctx):
         global stopTimer
         stopTimer = False
+        await self.updateall(ctx)
         await self.autoroleupdate(ctx)
     
     @commands.command()
@@ -33,7 +34,7 @@ class Updater(commands.Cog):
 
     async def autoroleupdate(self, ctx):
         while True:
-            await asyncio.sleep(1*60*60)
+            await asyncio.sleep(3*60*60)
             if stopTimer is True:
                 print ("stopping auto updater")
                 break
