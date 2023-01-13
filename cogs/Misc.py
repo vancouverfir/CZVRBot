@@ -14,24 +14,28 @@ class Misc(commands.Cog):
     @commands.command()
     async def mochi(self, ctx):
         """Get chirped"""
-        random = randint(1,14)
+        random = randint(1, 14)
         image = discord.File(f"./mochi/{random}.jpg", filename=f"{random}.jpg")
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{random}.jpg")
         await ctx.send(file=image, embed=embed)
-    
+
     @commands.command()
     async def joinczvr(self, ctx):
         """Mochi will tell you how to be a CZVR controller"""
         embed = discord.Embed()
-        embed.add_field(name="How To Join", value="\nTo join the CZVR FIR you will need to first be a member of VATCAN and have your S1 Rating. You can request a transfer by following the steps here: https://czvr.ca/join. \n\nOnce accepted you will receive a email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n\n*NOTE: I highly recommend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter* \n\n**... I mean SQUAWK.**", inline=False)
+        embed.add_field(name="How To Join",
+                        value="\nTo join the CZVR FIR you will need to first be a member of VATCAN and have your S1 Rating. You can request a transfer by following the steps here: https://czvr.ca/join. \n\nOnce accepted you will receive a email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n\n*NOTE: I highly recommend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter* \n\n**... I mean SQUAWK.**",
+                        inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def link(self, ctx):
         """Mochi will tell you how to link your discord to our website"""
         embed = discord.Embed()
-        embed.add_field(name="How To link Your Discord", value="\nTo link your Discord account and have your roles and name synced with the CZVR website goto https://czvr.ca and log in with your vatsim account, then goto your dashboard on the website and click 'link discord' then follow the steps.\n\nOnce you've done this it can take upto 24hrs for the bot to give you your roles, or you can update them manually with ~updateroles\n\n**... I mean SQUAWK.**", inline=False)
+        embed.add_field(name="How To link Your Discord",
+                        value="\nTo link your Discord account and have your roles and name synced with the CZVR website goto https://czvr.ca and log in with your vatsim account, then goto your dashboard on the website and click 'link discord' then follow the steps.\n\nOnce you've done this it can take upto 24hrs for the bot to give you your roles, or you can update them manually with ~updateroles\n\n**... I mean SQUAWK.**",
+                        inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -45,12 +49,14 @@ class Misc(commands.Cog):
         # Check if the request was successful
         if response.status_code != 200:
             await ctx.send(embed=discord.Embed(title="Service Unavailable",
-                description="Error: Could not connect to our metar service. Try again later.",color=0xF23131))
+                                               description="Error: Could not connect to our metar service. Try again later.",
+                                               color=0xF23131))
             return
 
         if data['results'] == 0:
             await ctx.send(embed=discord.Embed(title="Unknown Airport",
-                description="Error: Could not fetch airport information. Please check the ICAO code and try again.",color=0xF23131))
+                                               description="Error: Could not fetch airport information. Please check the ICAO code and try again.",
+                                               color=0xF23131))
             return
 
         # Extract the relevant information from the response
@@ -94,6 +100,11 @@ class Misc(commands.Cog):
         embed.set_footer(text=location)
 
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=['whatcom'])
+    async def huh(self, ctx):
+        await ctx.send("<:huh:1040136701877698641>")
+
 
 async def setup(client):
     await client.add_cog(Misc(client))
