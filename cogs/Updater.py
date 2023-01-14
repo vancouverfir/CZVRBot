@@ -27,7 +27,7 @@ class Updater(commands.Cog):
     
     @commands.command()
     @commands.has_permissions(manage_roles=True)
-    async def stopautoroleupdate(self):
+    async def stopautoroleupdate(self, ctx):
         global stopTimer
         stopTimer = True
         
