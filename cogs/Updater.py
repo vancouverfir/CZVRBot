@@ -27,7 +27,7 @@ class Updater(commands.Cog):
     
     @commands.command()
     @commands.has_permissions(manage_roles=True)
-    async def stopautoroleupdate(self, ctx):
+    async def stopautoroleupdate(self):
         global stopTimer
         stopTimer = True
         
@@ -251,10 +251,10 @@ class Updater(commands.Cog):
         user = mycurs.fetchone()
         # commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
         if not user:
-            # if Verified in member.roles:
-            #    await member.edit(roles=[Verified,Guest])
-            # else:
-            #     await member.edit(roles=[])
+            if Verified in member.roles:
+                await member.edit(roles=[Verified,Guest])
+            else:
+                await member.edit(roles=[])
             return 0
 
         await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
