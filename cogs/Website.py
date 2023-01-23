@@ -27,18 +27,36 @@ class Website(commands.Cog):
         mycurs.execute("SELECT user_id FROM students WHERE status = 0")
         waitlist = mycurs.fetchall()
 
+        mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
+        waittime = mycurs.fetchone()
+
 
 
         for position, person in enumerate(waitlist):
             if user[0] == person[0]:
 
-                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!"))
+                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!\n\nThe Current wait time to start ground and delivery training is approximately **{waittime[0]}**."))
                 return
 
-        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!"))
+        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!\n\nThe Current waitlist in vancouver to begin delivery and ground training is approximately **{waittime[0]}**."))
 
     @commands.command()
-    async def monthlyactivity(self, ctx):
+    async def waittime(self, ctx):
+        '''Gets the current estimated wait time for new home controller training'''
+
+        mycurs = self.database_connect()
+
+        mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
+        waittime = mycurs.fetchone()
+
+        await ctx.send(embed=discord.Embed(title="Current Wait Times",description=f"Beep! {ctx.author.mention}, the current wait time to begin ground and delivery training in CZVR is approximately **{waittime[0]}**."))
+
+
+
+
+
+    @commands.command()
+    async def activity(self, ctx):
         '''Gets your monthly controlling hours'''
 
         mycurs = self.database_connect()
