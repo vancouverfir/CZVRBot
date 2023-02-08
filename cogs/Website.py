@@ -64,6 +64,9 @@ class Website(commands.Cog):
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {ctx.author.id}")
         user = mycurs.fetchone()
 
+        mycurs.execute(f"SELECT staff FROM roster WHERE cid = {user[0]}")
+        role = mycurs.fetchone()
+
         if not user:
             await ctx.send(embed=discord.Embed(title="You're not in our database!",
                                                description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca",
@@ -82,7 +85,19 @@ class Website(commands.Cog):
         if hours[0] == None:
             hours = [0.0]
 
-        await ctx.send(embed=discord.Embed(title=f"Your activity this month is {hours[0]} hours!"))
+        if role[0] == "exec":
+            reqhrs = 5
+        elif role[0] == "ins" or role[0] == "mentor" or role[0] == "staff":
+            reqhrs = 3
+        else:
+            reqhrs = 2
+
+        if hours[0] >= reqhrs:
+            await ctx.send(embed=discord.Embed(title=f"Your activity this month is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this month({reqhrs} hours)."))
+        elif hours[0] < reqhrs:
+            await ctx.send(embed=discord.Embed(title="Not Yet Meeting Monthly Hours",
+                                               description=f"Your activity this month is {hours[0]}. You require a minimum of {reqhrs} hours each month.",
+                                               colour=0xF23131))
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')

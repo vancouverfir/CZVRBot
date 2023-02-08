@@ -22,7 +22,8 @@ class Updater(commands.Cog):
     async def startautoroleupdate(self, ctx):
         global stopTimer
         stopTimer = False
-        await self.updateall(ctx)
+        suppress = True
+        await self.updateall(ctx, suppress)
         await self.autoroleupdate(ctx)
     
     @commands.command()
@@ -41,7 +42,8 @@ class Updater(commands.Cog):
             else:
                 print("starting autoupdater...")
             print("Updating all roles on timer...")
-            await self.updateall(ctx)
+            suppress = True
+            await self.updateall(ctx, suppress)
 
 
     @commands.command()
@@ -57,7 +59,12 @@ class Updater(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
-    async def updateall(self, ctx):
+    async def refreshroles(self, ctx):
+        """Admin Only: Refreshes roles for all users"""
+        suppress = False
+        await self.updateall(ctx, suppress)
+
+    async def updateall(self, ctx, suppress):
         print(f"Updating all roles for all users")
         """Used to update roles for all users"""
 
@@ -68,9 +75,11 @@ class Updater(commands.Cog):
                 print(f"Completed updating all roles for {member.nick}\n")
             else:
                 pass
-
-        await ctx.send(embed=discord.Embed(title="All roles have been updated",description="The roles of all users were updated successfully!"))
-        print("Completed updating all user roles\n")
+        if suppress is True:
+            print("Completed updating all user roles\n Suppressing discord notification \n")
+        else:
+            await ctx.send(embed=discord.Embed(title="All roles have been updated",description="The roles of all users were updated successfully!"))
+            print("Completed updating all user roles\n")
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
