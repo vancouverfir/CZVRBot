@@ -152,6 +152,7 @@ class Updater(commands.Cog):
                 await self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1])
 
     async def update_user_type(self, guild, member: discord.Member, status, instructor):
+
         # Takes in database info to add home, visiting, and instructor roles
 
         homeRole = int(os.getenv('HOME-ROLE'))
@@ -205,8 +206,34 @@ class Updater(commands.Cog):
                 await self.remove_excess_roles(member,[Visit, Guest, Mentor])
 
 
+    
+    async def top_controller(self, member):
+        TopRole = int(os.getenv('TOP-ROLE'))
+
+        mycurs = self.database_connect()
+        mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {member.id}")
+        user = mycurs.fetchone()
+
+        if not user:
+            return
+        
+        mycurs.execute(f"SELECT cid FROM roster ORDER BY currency DESC LIMIT 5")
+        topFive = []
+
+        for i in mycurs:
+            topFive.append(i[0])
 
 
+        if user[0] in topFive:
+            print("Congrats for being in the top 5...")
+            await member.add_roles(TopRole)
+        else:
+            if TopRole in member.roles:
+                print("Not a top controller Anymore...")
+                await member.remove_roles(TopRole)
+                
+        
+        mycurs.close()
 
 
     async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
@@ -276,5 +303,15 @@ class Updater(commands.Cog):
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
         await self.update_user_type(guild, member, status, instructor)
+        await self.top_controller(member)
+        
 
         mycurs.close()
+
+
+
+
+        
+        
+
+
