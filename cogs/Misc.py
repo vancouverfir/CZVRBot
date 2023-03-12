@@ -75,7 +75,7 @@ class Misc(commands.Cog):
         visibility = data['data'][0]['visibility']['miles']
         flight_condition = data['data'][0]['flight_category']
         location = data['data'][0]['station']['location']
-        time = data['data'][0]['observed'][-6:]
+        time = data['data'][0]['observed'][-8:-3] + 'Z'
 
         match flight_condition:
             case 'VFR':
