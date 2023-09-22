@@ -29,8 +29,7 @@ class Website(commands.Cog):
 
         mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
         waittime = mycurs.fetchone()
-
-
+        mycurs.close()
 
         for position, person in enumerate(waitlist):
             if user[0] == person[0]:
@@ -48,6 +47,7 @@ class Website(commands.Cog):
 
         mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
         waittime = mycurs.fetchone()
+        mycurs.close()
 
         await ctx.send(embed=discord.Embed(title="Current Wait Times",description=f"Beep! {ctx.author.mention}, the current wait time to begin ground and delivery training in CZVR is approximately **{waittime[0]}**."))
 
@@ -75,6 +75,7 @@ class Website(commands.Cog):
 
         mycurs.execute(f"SELECT currency FROM roster WHERE cid = {user[0]}")
         hours = mycurs.fetchone()
+        mycurs.close()
 
         if not hours:
             await ctx.send(embed=discord.Embed(title="You're not a Vancouver",
