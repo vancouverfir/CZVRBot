@@ -5,7 +5,7 @@ import discord
 import mariadb as mariadb
 from discord.ext import commands
 from dotenv import load_dotenv
-
+from datetime import datetime
 
 async def setup(client):
     await client.add_cog(Updater(client))
@@ -65,22 +65,23 @@ class Updater(commands.Cog):
         await self.updateall(ctx, suppress)
 
     async def updateall(self, ctx, suppress):
-        print(f"Updating all roles for all users")
+        print(f"({datetime.now()}) Updating all roles for all users")
         """Used to update roles for all users"""
 
         for member in ctx.guild.members:
             if not member.bot:
-                print(f"Updating roles for {member.display_name}")
+                print(f"({datetime.now()}) Updating roles for {member.display_name}")
                 await self.role_updater(member, ctx.guild)
-                print(f"Completed updating all roles for {member.display_name}\n")
+                print(f"({datetime.now()}) Completed updating all roles for {member.display_name}\n")
             else:
                 pass
         if suppress is True:
-            print("Completed updating all user roles\n Suppressing discord notification \n")
+
+            print(f"({datetime.now()}) Completed updating all user roles\n Suppressing discord notification \n")
         else:
             await ctx.send(embed=discord.Embed(title="All roles have been updated",
                                                description="The roles of all users were updated successfully!"))
-            print("Completed updating all user roles\n")
+            print(f"({datetime.now()}) Completed updating all user roles\n")
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -231,7 +232,7 @@ class Updater(commands.Cog):
             print("Congrats for being in the top 5...")
             await member.add_roles(Top)
         else:
-            if TopRole in member.roles:
+            if Top in member.roles:
                 print("Not a top controller Anymore...")
                 await member.remove_roles(Top)
 
