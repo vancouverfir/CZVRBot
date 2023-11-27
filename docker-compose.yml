@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  czvr-mochi-bot:
+    image: @czvr/mochi-bot:latest
+    container_name: czvr-mochi-bot
+    env_file: .env
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
