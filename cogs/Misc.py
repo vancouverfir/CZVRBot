@@ -1,12 +1,13 @@
 import os
 from random import randint
+from datetime import datetime
 
 import discord
 import requests as requests
 from discord.ext import commands
 
-
 class Misc(commands.Cog):
+    last_tz_error = datetime.now()
 
     def __init__(self, client):
         self.client = client
@@ -19,6 +20,25 @@ class Misc(commands.Cog):
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{random}.jpg")
         await ctx.send(file=image, embed=embed)
+
+    @commands.command()
+    async def tz(self, ctx):
+        """Show the number of days since the last time zone mistake"""
+        embed = discord.Embed()
+        days = (datetime.now() - Misc.last_tz_error).days
+        hours = (datetime.now() - Misc.last_tz_error).seconds // 3600
+        minutes = ((datetime.now() - Misc.last_tz_error).seconds // 60) % 60
+        text = str(days) + " days, " + str(hours).zfill(2) + "h" + str(minutes).zfill(2) + "m"
+        embed.add_field(name="Since Timezone Issue",
+                        value=text,
+                        inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def resettz(self, ctx):
+        """Reset the timezone mistake counter"""
+        Misc.last_tz_error = datetime.now()
+        await ctx.message.add_reaction("<:huh:1040136701877698641>")
 
     @commands.command()
     async def joinczvr(self, ctx):
