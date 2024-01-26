@@ -224,7 +224,7 @@ class Updater(commands.Cog):
         # mycurs.execute(f"SELECT cid FROM roster ORDER BY currency DESC LIMIT 5")
         (_, daysInMonth) = calendar.monthrange(datetime.today().year, datetime.today().month)
         dateStart = datetime.today().replace(day=1, hour=0, minute=0, second=0).isoformat('T', 'seconds')
-        dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isformat('T', 'seconds')
+        dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isoformat('T', 'seconds')
         print(f"start of month: {dateStart}, end of month: {dateEnd}")
 
         mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM nyunhacvky.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")

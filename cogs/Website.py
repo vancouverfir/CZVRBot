@@ -87,11 +87,11 @@ class Website(commands.Cog):
             hours = [0.0]
 
         if role[0] == "exec":
-            reqhrs = 5
+            reqhrs = 3
         elif role[0] == "ins" or role[0] == "mentor" or role[0] == "staff":
             reqhrs = 3
         else:
-            reqhrs = 2
+            reqhrs = 3
 
         if hours[0] >= reqhrs:
             await ctx.send(embed=discord.Embed(title=f"Your activity this quarter is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this quarter: ({reqhrs} hours)."))
