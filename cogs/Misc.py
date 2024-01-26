@@ -15,7 +15,7 @@ class Misc(commands.Cog):
     @commands.command()
     async def mochi(self, ctx):
         """Get chirped"""
-        random = randint(1, 14)
+        random = randint(1, 15)
         image = discord.File(f"./mochi/{random}.jpg", filename=f"{random}.jpg")
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{random}.jpg")
