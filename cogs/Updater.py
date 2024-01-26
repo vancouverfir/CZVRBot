@@ -6,6 +6,7 @@ import mariadb as mariadb
 from discord.ext import commands
 from dotenv import load_dotenv
 from datetime import datetime
+import calendar
 
 async def setup(client):
     await client.add_cog(Updater(client))
@@ -220,7 +221,13 @@ class Updater(commands.Cog):
         if not user:
             return
 
-        mycurs.execute(f"SELECT cid FROM roster ORDER BY currency DESC LIMIT 5")
+        # mycurs.execute(f"SELECT cid FROM roster ORDER BY currency DESC LIMIT 5")
+        (_, daysInMonth) = calendar.monthrange(datetime.today().year, datetime.today().month)
+        dateStart = datetime.today().replace(day=1, hour=0, minute=0, second=0).isoformat('T', 'seconds')
+        dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isformat('T', 'seconds')
+        print(f"start of month: {dateStart}, end of month: {dateEnd}")
+
+        mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM nyunhacvky.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")
         topFive = []
 
         for i in mycurs:

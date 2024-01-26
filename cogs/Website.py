@@ -57,7 +57,7 @@ class Website(commands.Cog):
 
     @commands.command()
     async def activity(self, ctx):
-        '''Gets your monthly controlling hours'''
+        '''Gets your quarterly controlling hours'''
 
         mycurs = self.database_connect()
 
@@ -94,10 +94,10 @@ class Website(commands.Cog):
             reqhrs = 2
 
         if hours[0] >= reqhrs:
-            await ctx.send(embed=discord.Embed(title=f"Your activity this month is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this month({reqhrs} hours)."))
+            await ctx.send(embed=discord.Embed(title=f"Your activity this quarter is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this quarter: ({reqhrs} hours)."))
         elif hours[0] < reqhrs:
-            await ctx.send(embed=discord.Embed(title="Not Yet Meeting Monthly Hours",
-                                               description=f"Your activity this month is {hours[0]}. You require a minimum of {reqhrs} hours each month.",
+            await ctx.send(embed=discord.Embed(title="Not Yet Meeting Quarterly Hours",
+                                               description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.",
                                                colour=0xF23131))
 
     def database_connect(self):
