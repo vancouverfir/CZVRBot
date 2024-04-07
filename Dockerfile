@@ -6,5 +6,5 @@ RUN pip install mariadb discord python-dotenv requests
 
 WORKDIR /home
 
-CMD ["python", "./main.py"]
+CMD ["python", "-u", "./main.py"]
 
