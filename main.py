@@ -54,7 +54,7 @@ async def on_command_error(ctx, error):
         await ctx.send(embed=discord.Embed(title="Missing Permissions", description='```CHIRP!! You do not have the permissions required to use this command```', colour = 0xF23131))
 
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.send(embed=discord.Embed(title="Unknown Command", description='```sad mochi noises```', colour = 0xF23131))
+        await ctx.send(embed=discord.Embed(title="Unknown Command", description='```Sad Mochi noises```', colour = 0xF23131))
 
 async def main():
     await loadallcogs()

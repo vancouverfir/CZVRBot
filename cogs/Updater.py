@@ -227,7 +227,7 @@ class Updater(commands.Cog):
         dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isoformat('T', 'seconds')
         print(f"start of month: {dateStart}, end of month: {dateEnd}")
 
-        mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM nyunhacvky.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")
+        mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM {os.getenv('DB-NAME')}.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")
         topFive = []
 
         for i in mycurs:
