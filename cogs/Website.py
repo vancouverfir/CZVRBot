@@ -13,16 +13,15 @@ class Website(commands.Cog):
         self.client = client
         load_dotenv()
     
-    @commands.command()
+    @commands.hybrid_command(name='waitlist', description="Check your position on the waitlist")
     async def waitlist(self, ctx):
-        """Checks your position on the waitlist"""
         mycurs = self.database_connect()
 
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {ctx.author.id}")
         user = mycurs.fetchone()
 
         if not user:
-            await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca",colour = 0xF23131))
+            await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your Discord account in your dashboard at http://www.czvr.ca",colour = 0xF23131), ephemeral=True)
             return
 
         mycurs.execute("SELECT user_id FROM students WHERE status = 0")
@@ -35,14 +34,13 @@ class Website(commands.Cog):
         for position, person in enumerate(waitlist):
             if user[0] == person[0]:
 
-                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!\n\nThe Current wait time to start ground and delivery training is approximately **{waittime[0]}**."))
+                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!\n\nThe Current wait time to start ground and delivery training is approximately **{waittime[0]}**."), ephemeral=True)
                 return
 
-        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!\n\nThe Current waitlist in vancouver to begin delivery and ground training is approximately **{waittime[0]}**."))
+        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you beleive this is an error contact our Chief Instructor!\n\nThe current wait time in Vancouver to begin delivery and ground training is approximately **{waittime[0]}**."), ephemeral=True)
 
-    @commands.command()
+    @commands.hybrid_command(name='waittime', description="Check the current estimated wait time for new Home Controller Training")
     async def waittime(self, ctx):
-        '''Gets the current estimated wait time for new home controller training'''
 
         mycurs = self.database_connect()
 
@@ -56,9 +54,8 @@ class Website(commands.Cog):
 
 
 
-    @commands.command()
+    @commands.hybrid_command(name='activity', description="Check how many hours you've logged this quarter")
     async def activity(self, ctx):
-        '''Gets your quarterly controlling hours'''
 
         mycurs = self.database_connect()
 

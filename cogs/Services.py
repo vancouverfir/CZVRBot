@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from .customlogging import log
 
-version = '```V1.4```'
+version = '```V3.7```'
 
 
 class Service(commands.Cog):

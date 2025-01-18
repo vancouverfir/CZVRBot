@@ -20,6 +20,9 @@ client = commands.Bot(command_prefix='~', intents=intents, case_insensitive=True
 async def on_ready():
     log(f"We have logged in as {client.user}", "success")
 
+    await client.tree.sync()
+    log(f'Slash commands synced', "success")
+
 
 # Cog Loading
 @client.command()

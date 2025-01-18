@@ -50,17 +50,20 @@ class Updater(commands.Cog):
             await self.updateall(ctx, suppress)
             log("Updating all roles on timer...")
 
-    @commands.command()
+    @commands.hybrid_command(name='updateroles', description="Update your roles")
     async def updateroles(self, ctx):
         log(f"Updating roles for {ctx.author.nick}")
         roleupdate = await self.role_updater(ctx.author, ctx.guild)
 
         if roleupdate == 0:
             await ctx.send(embed=discord.Embed(title="You're not in our database!",
-                                               description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca"))
+                description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca"),
+                    ephemeral=True)
         else:
             await ctx.send(embed=discord.Embed(title="Your roles have been updated!",
-                                               description=f"{ctx.author.mention}, chirp! Your roles are now up to date!"))
+                description=f"{ctx.author.mention}, chirp! Your roles are now up to date!"),
+                    ephemeral=True)
+
         log(f"Completed updating all roles for {ctx.author.nick}\n", 'success')
 
     @commands.command()

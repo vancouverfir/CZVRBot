@@ -10,8 +10,8 @@ class Moderation(commands.Cog):
 
     @commands.command(aliases=['c'])
     @commands.has_permissions(manage_messages=True)
-    async def clear(self, ctx, amt=5):
-        """Used to delete the last messages. (Default is 5 including the command)"""
+    async def clear(self, ctx, amt=10):
+        """Used to delete the last messages. (Default is 10 including the command)"""
         await ctx.channel.purge(limit=amt)
         log(f"Cleared {amt} messages\n")
 
