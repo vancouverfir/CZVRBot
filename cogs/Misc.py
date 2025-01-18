@@ -75,12 +75,15 @@ class Misc(commands.Cog):
             await ctx.send(embed=discord.Embed(title="Service Unavailable",
                                                description="Error: Could not connect to our metar service. Try again later.",
                                                color=0xF23131))
+            log("Unable to connect to metar service", "error")
             return
 
         if data['results'] == 0:
             await ctx.send(embed=discord.Embed(title="Unknown Airport",
                                                description="Error: Could not fetch airport information. Please check the ICAO code and try again.",
                                                color=0xF23131))
+            
+            log(f"Unable to fetch metar for {icao}", "warn")
             return
 
         # Extract the relevant information from the response
