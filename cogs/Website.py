@@ -101,7 +101,7 @@ class Website(commands.Cog):
                                                description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.",
                                                colour=0xF23131))
             
-        log(f"{ctx.author.nick} has {hours[0]} of {reqhrs} for this quarter")
+        log(f"{ctx.author.nick} has {hours[0]} of {reqhrs} required hours for this quarter")
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')

@@ -129,37 +129,37 @@ class Updater(commands.Cog):
         match rating:
             case 'S1':
                 await member.add_roles(S1)
-                log(f"     Giving Role S1 to {member.display_name}")
+                log(f"Giving role S1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S2, S3, C1, C3, I1, I3])
 
             case 'S2':
                 await member.add_roles(S2)
-                log(f"     Giving Role S2 to {member.display_name}")
+                log(f"Giving role S2 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S3, C1, C3, I1, I3])
 
             case 'S3':
                 await member.add_roles(S3)
-                log(f"     Giving Role S3 to {member.display_name}")
+                log(f"Giving role S3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, C1, C3, I1, I3])
 
             case 'C1':
                 await member.add_roles(C1)
-                log(f"     Giving Role C1 to {member.display_name}")
+                log(f"Giving role C1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C3, I1, I3])
 
             case 'C3':
                 await member.add_roles(C3)
-                log(f"     Giving Role C3 to {member.display_name}")
+                log(f"Giving role C3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, I1, I3])
 
             case 'I1':
                 await member.add_roles(I1)
-                log(f"     Giving Role I1 to {member.display_name}")
+                log(f"Giving role I1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I3])
 
             case 'I3':
                 await member.add_roles(I3)
-                log(f"     Giving Role I3 to {member.display_name}")
+                log(f"Giving role I3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I1])
 
     async def update_user_type(self, guild, member: discord.Member, status, instructor):
@@ -181,37 +181,37 @@ class Updater(commands.Cog):
 
         if status == None:
             await member.add_roles(Guest)
-            log(f"     Giving Role {Guest.name} to {member.display_name}")
+            log(f"Giving role {Guest.name} to {member.display_name}")
             await self.remove_excess_roles(member, [Home, Visit, Instructor, Mentor])
             return
 
         match status[0]:
             case 'home':
                 await member.add_roles(Home)
-                log(f"     Giving Role {Home.name} to {member.display_name}")
+                log(f"Giving role {Home.name} to {member.display_name}")
                 if instructor == None:
                     await self.remove_excess_roles(member, [Visit, Instructor, Mentor, Guest])
                     return
                 elif instructor[0] == 0:
                     await member.add_roles(Mentor)
-                    log(f"     Giving Role {Mentor.name} to {member.display_name}")
+                    log(f"Giving role {Mentor.name} to {member.display_name}")
                     await self.remove_excess_roles(member, [Visit, Instructor, Guest])
 
                 elif instructor[0] == 1:
                     await member.add_roles(Instructor)
-                    log(f"     Giving Role {Instructor.name} to {member.display_name}")
+                    log(f"Giving role {Instructor.name} to {member.display_name}")
                     await self.remove_excess_roles(member, [Visit, Mentor, Guest])
 
             case 'visit':
                 await member.add_roles(Visit)
-                log(f"     Giving Role {Visit.name} to {member.display_name}")
+                log(f"Giving role {Visit.name} to {member.display_name}")
                 await self.remove_excess_roles(member, [Home, Instructor, Mentor, Guest])
 
             case 'instructor':
                 await member.add_roles(Home)
-                log(f"     Giving Role {Home.name} to {member.display_name}")
+                log(f"Giving role {Home.name} to {member.display_name}")
                 await member.add_roles(Instructor)
-                log(f"     Giving Role {Instructor.name} to {member.display_name}")
+                log(f"Giving role {Instructor.name} to {member.display_name}")
                 await self.remove_excess_roles(member, [Visit, Guest, Mentor])
 
     async def top_controller(self, guild, member: discord.Member):
@@ -241,11 +241,11 @@ class Updater(commands.Cog):
         mycurs.close()
 
         if user[0] in topFive:
-            log("     Congrats for being in the top 5...")
+            log("Congrats for being in the top 5...")
             await member.add_roles(Top)
         else:
             if Top in member.roles:
-                log("     Not a top controller Anymore...")
+                log("Not a top controller anymore...")
                 await member.remove_roles(Top)
 
     async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
@@ -260,7 +260,7 @@ class Updater(commands.Cog):
         else:
             updated_member = await member.edit(nick=f"{fname} {lname} - {cid}")
 
-        log(f"     nickname set to {updated_member.nick}")
+        log(f"Nickname set to {updated_member.nick}")
         return updated_member
 
     def database_connect(self):
@@ -301,10 +301,10 @@ class Updater(commands.Cog):
         if not user:
             if Verified in member.roles:
                 await member.edit(roles=[Verified, Guest])
-                log("     Not in the Database, but Verified", "warn")
+                log("Not in the Database, but Verified", "warn")
             else:
                 await member.edit(roles=[])
-                log("     Not in the Database!", "warn")
+                log("Not in the Database!", "warn")
 
             return 0
 

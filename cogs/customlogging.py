@@ -4,7 +4,7 @@ from termcolor import colored
 def log(message, type = "info"):
 
     if type == "error":
-        print(colored(f"({datetime.now()}) [ERROR]: {message}", 'red'))
+        print(colored(f"({datetime.now()})   [ERROR]: {message}", 'red'))
 
     elif type == "test":
         print("this is a test")
@@ -16,7 +16,7 @@ def log(message, type = "info"):
         print(colored(f"({datetime.now()}) [SUCCESS]: {message}", 'green'))
 
     elif type == "info":
-        print(f"({datetime.now()}) [INFO]: {message}")
+        print(f"({datetime.now()})    [INFO]: {message}")
 
     else:
         print(colored("Log Type Error", "red"))
