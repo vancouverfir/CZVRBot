@@ -3,8 +3,9 @@ import os
 import discord
 import mariadb as mariadb
 from discord.ext import commands
-from discord.utils import get
 from dotenv import load_dotenv
+
+from .customlogging import log
 
 class Website(commands.Cog):
 
@@ -99,6 +100,8 @@ class Website(commands.Cog):
             await ctx.send(embed=discord.Embed(title="Not Yet Meeting Quarterly Hours",
                                                description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.",
                                                colour=0xF23131))
+            
+        log(f"{ctx.author.nick} has {hours[0]} of {reqhrs} for this quarter")
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')
@@ -109,9 +112,9 @@ class Website(commands.Cog):
         try:
             db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
         except mariadb.Error as e:
-            print(f"Error connecting to MariaDB Platform: {e}")
+            log(f"Error connecting to MariaDB Platform: {e}", "error")
         else:
-            print("Connected to the database")
+            log("Connected to the database", "success")
             mycurs = db.cursor()
             return mycurs
 

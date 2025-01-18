@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.utils import get
+from .customlogging import log
 
 
 class Moderation(commands.Cog):
@@ -13,7 +13,7 @@ class Moderation(commands.Cog):
     async def clear(self, ctx, amt=5):
         """Used to delete the last messages. (Default is 5 including the command)"""
         await ctx.channel.purge(limit=amt)
-        print(f"Cleared {amt} messages\n")
+        log(f"Cleared {amt} messages\n")
 
     @commands.command(aliases=['k'])
     @commands.has_permissions(kick_members=True)
@@ -21,7 +21,7 @@ class Moderation(commands.Cog):
         """Used to kick members"""
         await mem.kick(reason=reason)
         await ctx.send( f'Kicked {mem.mention}')
-        print(f"Kicked {mem.name}\n")
+        log(f"Kicked {mem.name}\n")
 
     @commands.command(aliases=['b'])
     @commands.has_permissions(ban_members=True)
@@ -29,7 +29,7 @@ class Moderation(commands.Cog):
         """Used to ban members"""
         await mem.ban(reason=reason)
         await ctx.send(f'Banned {mem.mention}')
-        print(f"Banned {mem.name}\n")
+        log(f"Banned {mem.name}\n")
 
     @commands.command(aliases=['ub'])
     @commands.has_permissions(ban_members=True)
@@ -43,14 +43,13 @@ class Moderation(commands.Cog):
             if user.id == mem:
                 await ctx.guild.unban(user)
                 await ctx.send(f'Unbanned {user.mention}')
-                print(f"Unbanned {user.name}\n")
+                log(f"Unbanned {user.name}\n")
                 return
 
     @commands.command(pass_contest=True)
     @commands.has_permissions(manage_roles=True)
     async def role(self, ctx, addremove, member: discord.Member, role: discord.Role):
         """Used to give roles to members"""
-        server_roles = get(member.guild.roles, name=role)
 
         if addremove == 'add':
             await member.add_roles(role)
@@ -59,6 +58,7 @@ class Moderation(commands.Cog):
         elif addremove == 'remove':
             await member.remove_roles(role)
             await ctx.send(f'{role} have been removed to {member.nick}')
+
 
 
 async def setup(client):

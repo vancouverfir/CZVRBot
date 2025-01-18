@@ -4,6 +4,7 @@ import dotenv
 import asyncio
 
 from discord.ext import commands
+from cogs.customlogging import log
 
 dotenv.load_dotenv()
 
@@ -17,7 +18,7 @@ client = commands.Bot(command_prefix='~', intents=intents, case_insensitive=True
 
 @client.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
+    log(f"We have logged in as {client.user}", "success")
 
 
 # Cog Loading
@@ -37,11 +38,13 @@ async def unload(ctx, extension):
 
 async def loadallcogs():
     for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
+        if filename.endswith('.py') and filename != "customlogging.py":
             # try:
             await client.load_extension(f'cogs.{filename[:-3]}')
+            log(f"Loaded cog {filename[:-3]}", "success")
             # except:
-            #     print(f"Failed to load cogs.{filename[:-3]}")
+            #     log(f"Failed to load cogs.{filename[:-3]}", "error")
+
 
 
 # Errors
@@ -52,9 +55,12 @@ async def on_command_error(ctx, error):
 
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=discord.Embed(title="Missing Permissions", description='```CHIRP!! You do not have the permissions required to use this command```', colour = 0xF23131))
+        log(f"User {ctx.author.nick} does not have permissions to run {ctx.message.content}", "warn")
 
     elif isinstance(error, commands.CommandNotFound):
         await ctx.send(embed=discord.Embed(title="Unknown Command", description='```Sad Mochi noises```', colour = 0xF23131))
+        log(f'Unkown command: {error.args[0]}', 'error')
+        
 
 async def main():
     await loadallcogs()

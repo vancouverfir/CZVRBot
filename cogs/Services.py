@@ -2,11 +2,9 @@ import sys
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import os
-import cogs.Updater as Updater
+from .customlogging import log
 
-version = '```V1.2```'
+version = '```V1.4```'
 
 
 class Service(commands.Cog):
@@ -17,7 +15,7 @@ class Service(commands.Cog):
     # Events
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        print(f"{member} has left the server")
+        log(f"{member} has left the server")
 
     # Commands
     @commands.command(aliases=['p'])

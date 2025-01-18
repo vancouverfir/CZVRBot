@@ -6,6 +6,9 @@ import discord
 import requests as requests
 from discord.ext import commands
 
+from .customlogging import log
+
+
 class Misc(commands.Cog):
     last_tz_error = datetime.now()
 
@@ -39,6 +42,7 @@ class Misc(commands.Cog):
         """Reset the timezone mistake counter"""
         Misc.last_tz_error = datetime.now()
         await ctx.message.add_reaction("<:huh:1040136701877698641>")
+        log("Timezone counter was reset :(")
 
     @commands.command()
     async def joinczvr(self, ctx):
@@ -120,6 +124,9 @@ class Misc(commands.Cog):
         embed.set_footer(text=location)
 
         await ctx.send(embed=embed)
+
+        log(f"Metar for {icao} fetched successfully", "success")
+
 
     @commands.command(aliases=['whatcom'])
     async def huh(self, ctx):

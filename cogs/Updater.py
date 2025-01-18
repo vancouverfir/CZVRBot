@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 import calendar
 
+from .customlogging import log
+
 async def setup(client):
     await client.add_cog(Updater(client))
 
@@ -17,37 +19,40 @@ class Updater(commands.Cog):
     def __init__(self, client):
         self.client = client
         load_dotenv()
+        global stopTimer
+        stopTimer = False
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def startautoroleupdate(self, ctx):
-        global stopTimer
         stopTimer = False
         suppress = True
         await self.updateall(ctx, suppress)
         await self.autoroleupdate(ctx)
+        await ctx.send(embed=discord.Embed(title="Auto role update started successfully!",
+                                               description="All roles will be updated every 3 hours."))
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def stopautoroleupdate(self, ctx):
-        global stopTimer
         stopTimer = True
+        await ctx.send(embed=discord.Embed(title="Auto role update stop successfully!"))
 
     async def autoroleupdate(self, ctx):
         while True:
             await asyncio.sleep(3 * 60 * 60)
             if stopTimer is True:
-                print("stopping auto updater")
+                log("stopping auto updater")
                 break
             else:
-                print("starting autoupdater...")
-            print("Updating all roles on timer...")
+                log("starting autoupdater...")
             suppress = True
             await self.updateall(ctx, suppress)
+            log("Updating all roles on timer...")
 
     @commands.command()
     async def updateroles(self, ctx):
-        print(f"Updating roles for {ctx.author.nick}")
+        log(f"Updating roles for {ctx.author.nick}")
         roleupdate = await self.role_updater(ctx.author, ctx.guild)
 
         if roleupdate == 0:
@@ -56,7 +61,7 @@ class Updater(commands.Cog):
         else:
             await ctx.send(embed=discord.Embed(title="Your roles have been updated!",
                                                description=f"{ctx.author.mention}, chirp! Your roles are now up to date!"))
-        print(f"Completed updating all roles for {ctx.author.nick}\n")
+        log(f"Completed updating all roles for {ctx.author.nick}\n", 'success')
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
@@ -66,29 +71,29 @@ class Updater(commands.Cog):
         await self.updateall(ctx, suppress)
 
     async def updateall(self, ctx, suppress):
-        print(f"({datetime.now()}) Updating all roles for all users")
+        log("Updating all roles for all users")
         """Used to update roles for all users"""
 
         for member in ctx.guild.members:
             if not member.bot:
-                print(f"({datetime.now()}) Updating roles for {member.display_name}")
+                log(f"Updating roles for {member.display_name}")
                 await self.role_updater(member, ctx.guild)
-                print(f"({datetime.now()}) Completed updating all roles for {member.display_name}\n")
+                log(f"Completed updating all roles for {member.display_name}\n", 'success')
             else:
                 pass
         if suppress is True:
 
-            print(f"({datetime.now()}) Completed updating all user roles\n Suppressing discord notification \n")
+            log("Completed updating all user roles\n    Suppressing discord notification \n", "success")
         else:
             await ctx.send(embed=discord.Embed(title="All roles have been updated",
                                                description="The roles of all users were updated successfully!"))
-            print(f"({datetime.now()}) Completed updating all user roles\n")
+            log("Completed updating all user roles\n", "success")
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        print(f"{member} has joined the server")
+        log(f"{member} has joined the server")
         roleupdate = await self.role_updater(member, member.guild)
-        print(f"Completed updating all roles for {member.display_name}\n")
+        log(f"Completed updating all roles for {member.display_name}\n", "success")
 
         dm = member.dm_channel
         if dm == None:
@@ -124,37 +129,37 @@ class Updater(commands.Cog):
         match rating:
             case 'S1':
                 await member.add_roles(S1)
-                print(f"Giving Role S1 to {member.display_name}")
+                log(f"     Giving Role S1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S2, S3, C1, C3, I1, I3])
 
             case 'S2':
                 await member.add_roles(S2)
-                print(f"Giving Role S2 to {member.display_name}")
+                log(f"     Giving Role S2 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S3, C1, C3, I1, I3])
 
             case 'S3':
                 await member.add_roles(S3)
-                print(f"Giving Role S3 to {member.display_name}")
+                log(f"     Giving Role S3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, C1, C3, I1, I3])
 
             case 'C1':
                 await member.add_roles(C1)
-                print(f"Giving Role C1 to {member.display_name}")
+                log(f"     Giving Role C1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C3, I1, I3])
 
             case 'C3':
                 await member.add_roles(C3)
-                print(f"Giving Role C3 to {member.display_name}")
+                log(f"     Giving Role C3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, I1, I3])
 
             case 'I1':
                 await member.add_roles(I1)
-                print(f"Giving Role I1 to {member.display_name}")
+                log(f"     Giving Role I1 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I3])
 
             case 'I3':
                 await member.add_roles(I3)
-                print(f"Giving Role I3 to {member.display_name}")
+                log(f"     Giving Role I3 to {member.display_name}")
                 await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I1])
 
     async def update_user_type(self, guild, member: discord.Member, status, instructor):
@@ -176,37 +181,37 @@ class Updater(commands.Cog):
 
         if status == None:
             await member.add_roles(Guest)
-            print(f"Giving Role {Guest.name} to {member.display_name}")
+            log(f"     Giving Role {Guest.name} to {member.display_name}")
             await self.remove_excess_roles(member, [Home, Visit, Instructor, Mentor])
             return
 
         match status[0]:
             case 'home':
                 await member.add_roles(Home)
-                print(f"Giving Role {Home.name} to {member.display_name}")
+                log(f"     Giving Role {Home.name} to {member.display_name}")
                 if instructor == None:
                     await self.remove_excess_roles(member, [Visit, Instructor, Mentor, Guest])
                     return
                 elif instructor[0] == 0:
                     await member.add_roles(Mentor)
-                    print(f"Giving Role {Mentor.name} to {member.display_name}")
+                    log(f"     Giving Role {Mentor.name} to {member.display_name}")
                     await self.remove_excess_roles(member, [Visit, Instructor, Guest])
 
                 elif instructor[0] == 1:
                     await member.add_roles(Instructor)
-                    print(f"Giving Role {Instructor.name} to {member.display_name}")
+                    log(f"     Giving Role {Instructor.name} to {member.display_name}")
                     await self.remove_excess_roles(member, [Visit, Mentor, Guest])
 
             case 'visit':
                 await member.add_roles(Visit)
-                print(f"Giving Role {Visit.name} to {member.display_name}")
+                log(f"     Giving Role {Visit.name} to {member.display_name}")
                 await self.remove_excess_roles(member, [Home, Instructor, Mentor, Guest])
 
             case 'instructor':
                 await member.add_roles(Home)
-                print(f"Giving Role {Home.name} to {member.display_name}")
+                log(f"     Giving Role {Home.name} to {member.display_name}")
                 await member.add_roles(Instructor)
-                print(f"Giving Role {Instructor.name} to {member.display_name}")
+                log(f"     Giving Role {Instructor.name} to {member.display_name}")
                 await self.remove_excess_roles(member, [Visit, Guest, Mentor])
 
     async def top_controller(self, guild, member: discord.Member):
@@ -225,7 +230,7 @@ class Updater(commands.Cog):
         (_, daysInMonth) = calendar.monthrange(datetime.today().year, datetime.today().month)
         dateStart = datetime.today().replace(day=1, hour=0, minute=0, second=0).isoformat('T', 'seconds')
         dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isoformat('T', 'seconds')
-        print(f"start of month: {dateStart}, end of month: {dateEnd}")
+        # print(f"start of month: {dateStart}, end of month: {dateEnd}")
 
         mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM {os.getenv('DB-NAME')}.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")
         topFive = []
@@ -236,11 +241,11 @@ class Updater(commands.Cog):
         mycurs.close()
 
         if user[0] in topFive:
-            print("Congrats for being in the top 5...")
+            log("     Congrats for being in the top 5...")
             await member.add_roles(Top)
         else:
             if Top in member.roles:
-                print("Not a top controller Anymore...")
+                log("     Not a top controller Anymore...")
                 await member.remove_roles(Top)
 
     async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
@@ -255,7 +260,7 @@ class Updater(commands.Cog):
         else:
             updated_member = await member.edit(nick=f"{fname} {lname} - {cid}")
 
-        print(f"nickname set to {updated_member.nick}")
+        log(f"     nickname set to {updated_member.nick}")
         return updated_member
 
     def database_connect(self):
@@ -267,9 +272,9 @@ class Updater(commands.Cog):
         try:
             db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
         except mariadb.Error as e:
-            print(f"Error connecting to MariaDB Platform: {e}")
+            log(f"Error connecting to MariaDB Platform: {e}", "error")
         else:
-            print("Connected to the database")
+            log("Connected to the database", "success")
             mycurs = db.cursor()
             return mycurs
 
@@ -277,7 +282,7 @@ class Updater(commands.Cog):
         for role in roles:
             if role in member.roles:
                 await member.remove_roles(role)
-                print(f"Removing Role {role.name} to {member.display_name}")
+                log(f"     Removing Role {role.name} to {member.display_name}")
 
     async def role_updater(self, member, guild):
         verifiedRole = int(os.getenv('VERIFIED-ROLE'))
@@ -296,10 +301,10 @@ class Updater(commands.Cog):
         if not user:
             if Verified in member.roles:
                 await member.edit(roles=[Verified, Guest])
-                print("Not in the Database, but Verified")
+                log("     Not in the Database, but Verified", "warn")
             else:
                 await member.edit(roles=[])
-                print("Not in the Database!")
+                log("     Not in the Database!", "warn")
 
             return 0
 
