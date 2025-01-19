@@ -59,7 +59,16 @@ class Moderation(commands.Cog):
             await member.remove_roles(role)
             await ctx.send(f'{role} have been removed to {member.nick}')
 
+    @commands.command(pass_context=True)
+    @commands.has_permissions(manage_channels=True)
+    async def sendmessage(self, ctx, channel: discord.TextChannel, *, message):
+        """Used to send a message in a specified channel"""
 
+        if channel.permissions_for(ctx.guild.me).send_messages:
+            await channel.send(message)
+            log(f"Sent a message to {channel.name}: {message}\n")
+        else:
+            await ctx.send("I don't have permission to send messages in that channel.")
 
 async def setup(client):
     await client.add_cog(Moderation(client))

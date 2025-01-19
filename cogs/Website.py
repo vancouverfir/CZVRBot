@@ -50,10 +50,6 @@ class Website(commands.Cog):
 
         await ctx.send(embed=discord.Embed(title="Current Wait Times",description=f"Beep! {ctx.author.mention}, the current wait time to begin ground and delivery training in CZVR is approximately **{waittime[0]}**."))
 
-
-
-
-
     @commands.hybrid_command(name='activity', description="Check how many hours you've logged this quarter")
     async def activity(self, ctx):
 
