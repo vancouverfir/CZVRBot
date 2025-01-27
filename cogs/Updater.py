@@ -19,13 +19,12 @@ class Updater(commands.Cog):
     def __init__(self, client):
         self.client = client
         load_dotenv()
-        global stopTimer
-        stopTimer = False
+        self.stopTimer = True
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def startautoroleupdate(self, ctx):
-        stopTimer = False
+        self.stopTimer = False
         suppress = True
         await self.updateall(ctx, suppress)
         await self.autoroleupdate(ctx)
@@ -35,13 +34,13 @@ class Updater(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def stopautoroleupdate(self, ctx):
-        stopTimer = True
+        self.stopTimer = True
         await ctx.send(embed=discord.Embed(title="Auto role update stop successfully!"))
 
     async def autoroleupdate(self, ctx):
         while True:
             await asyncio.sleep(3 * 60 * 60)
-            if stopTimer is True:
+            if self.stopTimer is True:
                 log("stopping auto updater")
                 break
             else:
@@ -49,6 +48,14 @@ class Updater(commands.Cog):
             suppress = True
             await self.updateall(ctx, suppress)
             log("Updating all roles on timer...")
+
+    @commands.command()
+    async def checkautoroleupdate(self, ctx):
+        if self.stopTimer is False:
+            await ctx.send(embed=discord.Embed(title="Auto Role Update is currently ON", colour=0x6CC24A))
+        elif self.stopTimer is True:
+            await ctx.send(embed=discord.Embed(title="Auto Role Update is currently OFF", colour=0xF15025))
+
 
     @commands.hybrid_command(name='updateroles', description="Update your roles")
     async def updateroles(self, ctx):
