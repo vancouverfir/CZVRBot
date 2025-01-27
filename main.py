@@ -63,7 +63,10 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CommandNotFound):
         await ctx.send(embed=discord.Embed(title="Unknown Command", description='```Sad Mochi noises```', colour = 0xF23131))
         log(f'Unkown command: {error.args[0]}', 'error')
-        
+
+    else:
+        await ctx.send(embed=discord.Embed(title="An Error Has Occured", description=error, colour = 0xF23131))
+        log(error, 'error')        
 
 async def main():
     await loadallcogs()

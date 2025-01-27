@@ -5,7 +5,7 @@ import mariadb as mariadb
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, UTC
 import calendar
 
 
@@ -82,8 +82,14 @@ class Updater(commands.Cog):
 
 
     @commands.command()
-    async def updaterscheduled(self, ctx):
-        ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration()}"))
+    async def nextupdate(self, ctx):
+        next = self.updateall.next_iteration
+        now = datetime.now(UTC)
+        diff = next - now
+        hours = diff.seconds // 3600
+        mins = (diff.seconds // 60)  % 60
+        
+        await ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration.strftime("%H:%M")}Z", description=f"That's in {hours} hours and {mins} minutes"))
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
