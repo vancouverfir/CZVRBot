@@ -1,12 +1,13 @@
 import os
 
 import asyncio
-import discord
 import mariadb as mariadb
-from discord.ext import commands
+import discord
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from datetime import datetime
 import calendar
+
 
 from .customlogging import log
 
@@ -19,42 +20,6 @@ class Updater(commands.Cog):
     def __init__(self, client):
         self.client = client
         load_dotenv()
-        self.stopTimer = True
-
-    @commands.command()
-    @commands.has_permissions(manage_roles=True)
-    async def startautoroleupdate(self, ctx):
-        self.stopTimer = False
-        suppress = True
-        await self.updateall(ctx, suppress)
-        await self.autoroleupdate(ctx)
-        await ctx.send(embed=discord.Embed(title="Auto role update started successfully!",
-                                               description="All roles will be updated every 3 hours."))
-
-    @commands.command()
-    @commands.has_permissions(manage_roles=True)
-    async def stopautoroleupdate(self, ctx):
-        self.stopTimer = True
-        await ctx.send(embed=discord.Embed(title="Auto role update stop successfully!"))
-
-    async def autoroleupdate(self, ctx):
-        while True:
-            await asyncio.sleep(3 * 60 * 60)
-            if self.stopTimer is True:
-                log("stopping auto updater")
-                break
-            else:
-                log("starting autoupdater...")
-            suppress = True
-            await self.updateall(ctx, suppress)
-            log("Updating all roles on timer...")
-
-    @commands.command()
-    async def checkautoroleupdate(self, ctx):
-        if self.stopTimer is False:
-            await ctx.send(embed=discord.Embed(title="Auto Role Update is currently ON", colour=0x6CC24A))
-        elif self.stopTimer is True:
-            await ctx.send(embed=discord.Embed(title="Auto Role Update is currently OFF", colour=0xF15025))
 
 
     @commands.hybrid_command(name='updateroles', description="Update your roles")
@@ -77,17 +42,22 @@ class Updater(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def refreshroles(self, ctx):
         """Admin Only: Refreshes roles for all users"""
-        suppress = False
-        await self.updateall(ctx, suppress)
+        
+        await self.updateall(False)
 
-    async def updateall(self, ctx, suppress):
+    @tasks.loop(hours=3)
+    async def updateall(self, suppress=True):
         log("Updating all roles for all users")
         """Used to update roles for all users"""
 
-        for member in ctx.guild.members:
+        guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
+        dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
+
+
+        for member in guild.members:
             if not member.bot:
                 log(f"Updating roles for {member.display_name}")
-                await self.role_updater(member, ctx.guild)
+                await self.role_updater(member, guild)
                 log(f"Completed updating all roles for {member.display_name}\n", 'success')
             else:
                 pass
@@ -95,9 +65,25 @@ class Updater(commands.Cog):
 
             log("Completed updating all user roles\n    Suppressing discord notification \n", "success")
         else:
-            await ctx.send(embed=discord.Embed(title="All roles have been updated",
+            await dev_channel.message.send(embed=discord.Embed(title="All roles have been updated",
                                                description="The roles of all users were updated successfully!"))
             log("Completed updating all user roles\n", "success")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.updateall.start()
+
+    @updateall.after_loop
+    async def autoroleupdatecancel(self):
+            if self.updateall.is_being_cancelled():
+                dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
+                await dev_channel.message.send(embed=discord.Embed(title="Auto Role Updater has been cancelled"))
+                log("Auto Role Updater was cancelled", "error")
+
+
+    @commands.command()
+    async def updaterscheduled(self, ctx):
+        ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration()}"))
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -310,7 +296,7 @@ class Updater(commands.Cog):
         # commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
         if not user:
             if Verified in member.roles:
-                await member.edit(roles=[Verified, Guest])
+                # await member.edit(roles=[Verified, Guest])
                 log("Not in the Database, but Verified", "warn")
             else:
                 await member.edit(roles=[])
