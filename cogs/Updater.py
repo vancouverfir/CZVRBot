@@ -5,7 +5,7 @@ import mariadb as mariadb
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from datetime import datetime, UTC
+from datetime import datetime, time, timezone
 import calendar
 
 
@@ -13,6 +13,8 @@ from .customlogging import log
 
 async def setup(client):
     await client.add_cog(Updater(client))
+
+times = [time(hour=3),time(hour=6),time(hour=9),time(hour=12),time(hour=15),time(hour=18),time(hour=21),time(hour=0)]
 
 
 class Updater(commands.Cog):
@@ -45,7 +47,7 @@ class Updater(commands.Cog):
         
         await self.updateall(False)
 
-    @tasks.loop(hours=3)
+    @tasks.loop(time=times)
     async def updateall(self, suppress=True):
         log("Updating all roles for all users")
         """Used to update roles for all users"""
@@ -84,7 +86,7 @@ class Updater(commands.Cog):
     @commands.command()
     async def nextupdate(self, ctx):
         next = self.updateall.next_iteration
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         diff = next - now
         hours = diff.seconds // 3600
         mins = (diff.seconds // 60)  % 60
