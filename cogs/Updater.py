@@ -44,32 +44,37 @@ class Updater(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def refreshroles(self, ctx):
         """Admin Only: Refreshes roles for all users"""
-        
+
         await self.updateall(False)
 
     @tasks.loop(time=times)
     async def updateall(self, suppress=True):
-        log("Updating all roles for all users")
         """Used to update roles for all users"""
+        try:
+            log("Updating all roles for all users")
 
-        guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
-        dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
+            guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
+            dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
 
-
-        for member in guild.members:
-            if not member.bot:
-                log(f"Updating roles for {member.display_name}")
-                await self.role_updater(member, guild)
-                log(f"Completed updating all roles for {member.display_name}\n", 'success')
+            for member in guild.members:
+                if not member.bot:
+                    log(f"Updating roles for {member.display_name}")
+                    await self.role_updater(member, guild)
+                    log(f"Completed updating all roles for {member.display_name}\n", 'success')
             else:
                 pass
-        if suppress is True:
 
-            log("Completed updating all user roles\n    Suppressing discord notification \n", "success")
-        else:
-            await dev_channel.message.send(embed=discord.Embed(title="All roles have been updated",
-                                               description="The roles of all users were updated successfully!"))
-            log("Completed updating all user roles\n", "success")
+            if suppress:
+                log("Completed updating all user roles\n    Suppressing discord notification \n", "success")
+            else:
+                await dev_channel.send(embed=discord.Embed(
+                    title="All roles have been updated",
+                    description="The roles of all users were updated successfully!"
+                ))
+                log("Completed updating all user roles\n", "success")
+
+        except Exception as e:
+            log(f"updateall loop encountered an error: {e}", "error")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -82,7 +87,6 @@ class Updater(commands.Cog):
                 await dev_channel.message.send(embed=discord.Embed(title="Auto Role Updater has been cancelled"))
                 log("Auto Role Updater was cancelled", "error")
 
-
     @commands.command()
     async def nextupdate(self, ctx):
         next = self.updateall.next_iteration
@@ -90,7 +94,7 @@ class Updater(commands.Cog):
         diff = next - now
         hours = diff.seconds // 3600
         mins = (diff.seconds // 60)  % 60
-        
+
         await ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration.strftime("%H:%M")}Z", description=f"That's in {hours} hours and {mins} minutes"))
 
     @commands.Cog.listener()
