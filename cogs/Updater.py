@@ -115,6 +115,14 @@ class Updater(commands.Cog):
             await dm.send(embed=discord.Embed(title="Welcome! Your roles have been assigned!",
                                               description=f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!"))
 
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        log(f"{member.nick} has left the server")
+        log_channel = self.client.get_channel(int(os.getenv('LOG-CHANNEL')))
+
+        await log_channel.send(embed=discord.Embed(title=f"{member.nick} has left the server"))
+
     async def update_user_rating(self, guild, member: discord.Member, rating):
 
         s1Role = int(os.getenv('S1-ROLE'))
