@@ -9,12 +9,12 @@ from datetime import datetime, time, timezone
 import calendar
 
 
-from .customlogging import log
+from .CustomLogging import log
 
 async def setup(client):
     await client.add_cog(Updater(client))
 
-times = [time(hour=3),time(hour=6),time(hour=9),time(hour=12),time(hour=15),time(hour=18),time(hour=21),time(hour=0)]
+times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15), time(hour=18), time(hour=21), time(hour=0)]
 
 
 class Updater(commands.Cog):
@@ -40,29 +40,40 @@ class Updater(commands.Cog):
 
         log(f"Completed updating all roles for {ctx.author.nick}\n", 'success')
 
-    @commands.command()
+    @commands.hybrid_command(name='1')
     @commands.has_permissions(manage_roles=True)
-    async def refreshroles(self, ctx):
+    async def a(self, ctx):
         """Admin Only: Refreshes roles for all users"""
 
+        await ctx.send(embed=discord.Embed(title="Started"), ephemeral=True)
         await self.updateall(False)
 
     @tasks.loop(time=times)
     async def updateall(self, suppress=True):
-        """Used to update roles for all users"""
+        """Used to update roles for all users with a single DB connection"""
         try:
-            log("Updating all roles for all users")
+            log("Batch updating roles for all users")
 
             guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
             dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
 
+            # Establish a single DB connection
+            db = self.database_connect()
+            if not db:
+                log("Failed to connect to database", "error")
+                return
+
+            mycurs = db.cursor()
+
             for member in guild.members:
                 if not member.bot:
                     log(f"Updating roles for {member.display_name}")
-                    await self.role_updater(member, guild)
-                    log(f"Completed updating all roles for {member.display_name}\n", 'success')
-            else:
-                pass
+                    await self.role_updater(member, guild, mycurs)
+                    log(f"Completed updating roles for {member.display_name}\n", "success")
+
+            # Close the DB connection after all users are processed
+            mycurs.close()
+            db.close()
 
             if suppress:
                 log("Completed updating all user roles\n    Suppressing discord notification \n", "success")
@@ -95,7 +106,7 @@ class Updater(commands.Cog):
         hours = diff.seconds // 3600
         mins = (diff.seconds // 60)  % 60
 
-        await ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration.strftime("%H:%M")}Z", description=f"That's in {hours} hours and {mins} minutes"))
+        await ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration.strftime('%H:%M')}Z", description=f"That's in {hours} hours and {mins} minutes"))
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -108,12 +119,9 @@ class Updater(commands.Cog):
             dm = await member.create_dm()
 
         if roleupdate == 0:
-            await dm.send(embed=discord.Embed(title="You're not in our database!",
-                                              description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca, then run ~updateroles in #introduce-yourself to be assigned your roles",
-                                              colour=0xF23131))
+            await dm.send(embed=discord.Embed(title="You're not in our database!", description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at https://www.czvr.ca, then run /updateroles to be assigned your roles", colour=0xF23131))
         else:
-            await dm.send(embed=discord.Embed(title="Welcome! Your roles have been assigned!",
-                                              description=f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!"))
+            await dm.send(embed=discord.Embed(title="Welcome! Your roles have been assigned!", description=f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!"))
 
 
     @commands.Cog.listener()
@@ -230,12 +238,11 @@ class Updater(commands.Cog):
                 log(f"Giving role {Instructor.name} to {member.display_name}")
                 await self.remove_excess_roles(member, [Visit, Guest, Mentor])
 
-    async def top_controller(self, guild, member: discord.Member):
+    async def top_controller(self, guild, member, mycurs):
         TopRole = int(os.getenv('TOP-ROLE'))
 
         Top = guild.get_role(TopRole)
 
-        mycurs = self.database_connect()
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {member.id}")
         user = mycurs.fetchone()
 
@@ -248,13 +255,16 @@ class Updater(commands.Cog):
         dateEnd = datetime.today().replace(day=daysInMonth, hour=23, minute=59, second=59).isoformat('T', 'seconds')
         # print(f"start of month: {dateStart}, end of month: {dateEnd}")
 
-        mycurs.execute(f"SELECT cid, SUM(duration) AS duration FROM {os.getenv('DB-NAME')}.session_logs WHERE session_start between '{dateStart}' and '{dateEnd}' GROUP BY cid  ORDER BY duration DESC LIMIT 5")
-        topFive = []
-
-        for i in mycurs:
-            topFive.append(i[0])
-
-        mycurs.close()
+        mycurs.execute(f"""
+            SELECT cid, SUM(duration) AS duration 
+            FROM {os.getenv('DB-NAME')}.session_logs 
+            WHERE session_start BETWEEN '{dateStart}' AND '{dateEnd}' 
+            GROUP BY cid  
+            ORDER BY duration DESC 
+            LIMIT 5
+        """)
+        
+        topFive = [row[0] for row in mycurs.fetchall()]  #Fetch all top controllers
 
         if user[0] in topFive:
             log("Congrats for being in the top 5...")
@@ -265,19 +275,26 @@ class Updater(commands.Cog):
                 await member.remove_roles(Top)
 
     async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
-
+        # Check if the member is the guild owner, and if so, do nothing
         if member == guild.owner:
             return member
 
+        # Create the desired nickname based on the conditions
         if cid_only or len(f"{fname} - {cid}") > 32:
-            updated_member = await member.edit(nick=str(cid))
+            desired_nickname = str(cid)
         elif not fullname or len(f"{fname} {lname} - {cid}") > 32:
-            updated_member = await member.edit(nick=f"{fname} - {cid}")
+            desired_nickname = f"{fname} - {cid}"
         else:
-            updated_member = await member.edit(nick=f"{fname} {lname} - {cid}")
+            desired_nickname = f"{fname} {lname} - {cid}"
 
-        log(f"Nickname set to {updated_member.nick}")
-        return updated_member
+        # Only update the nickname if the desired nickname is different from the current one
+        if member.nick != desired_nickname:
+            updated_member = await member.edit(nick=desired_nickname)
+            log(f"Nickname set to {updated_member.nick}")
+        else:
+            log(f"Nickname for {member.display_name} is already correct, no change needed.")
+
+        return member
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')
@@ -287,12 +304,11 @@ class Updater(commands.Cog):
 
         try:
             db = mariadb.connect(host=dbhost, user=dbuser, password=dbpass, database=dbname)
+            log("Connected to the database", "success")
+            return db
         except mariadb.Error as e:
             log(f"Error connecting to MariaDB Platform: {e}", "error")
-        else:
-            log("Connected to the database", "success")
-            mycurs = db.cursor()
-            return mycurs
+            return None
 
     async def remove_excess_roles(self, member, roles):
         for role in roles:
@@ -300,20 +316,19 @@ class Updater(commands.Cog):
                 await member.remove_roles(role)
                 log(f"     Removing Role {role.name} to {member.display_name}")
 
-    async def role_updater(self, member, guild):
+    async def role_updater(self, member, guild, mycurs):
         verifiedRole = int(os.getenv('VERIFIED-ROLE'))
         guestRole = int(os.getenv('GUEST-ROLE'))
 
         Verified = guild.get_role(verifiedRole)
         Guest = guild.get_role(guestRole)
-        """Updates roles for a single user"""
 
-        mycurs = self.database_connect()
+        """Updates roles for a single user using a shared DB connection"""
 
         mycurs.execute(
             f"SELECT id, discord_user_id, rating_short, display_cid_only, display_last_name, display_fname, lname, permissions FROM users WHERE discord_user_id = {member.id}")
         user = mycurs.fetchone()
-        # commented out for soft launch to allow time for users to link their accounts. When ready to remove roles from unlinked accounts uncomment the below statements.
+
         if not user:
             if Verified in member.roles:
                 # await member.edit(roles=[Verified, Guest])
@@ -333,7 +348,6 @@ class Updater(commands.Cog):
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
-        mycurs.close()
 
         await self.update_user_type(guild, member, status, instructor)
-        await self.top_controller(guild, member)
+        await self.top_controller(guild, member, mycurs)

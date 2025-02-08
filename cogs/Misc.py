@@ -6,7 +6,7 @@ import discord
 import requests as requests
 from discord.ext import commands
 
-from .customlogging import log
+from .CustomLogging import log
 
 
 class Misc(commands.Cog):

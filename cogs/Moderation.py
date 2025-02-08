@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .customlogging import log
+from .CustomLogging import log
 
 
 class Moderation(commands.Cog):

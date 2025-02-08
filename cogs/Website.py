@@ -5,7 +5,7 @@ import mariadb as mariadb
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from .customlogging import log
+from .CustomLogging import log
 
 class Website(commands.Cog):
 

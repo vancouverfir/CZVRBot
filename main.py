@@ -4,7 +4,7 @@ import dotenv
 import asyncio
 
 from discord.ext import commands
-from cogs.customlogging import log
+from cogs.CustomLogging import log
 
 dotenv.load_dotenv()
 
@@ -13,7 +13,7 @@ token = os.getenv('BOT-TOKEN')
 intents = discord.Intents.all()
 # intents.message_content = True
 
-client = commands.Bot(command_prefix='~', intents=intents, case_insensitive=True)
+client = commands.Bot(command_prefix='a', intents=intents, case_insensitive=True)
 
 
 @client.event
@@ -43,7 +43,7 @@ async def unload(ctx, extension):
 
 async def loadallcogs():
     for filename in os.listdir('./cogs'):
-        if filename.endswith('.py') and filename != "customlogging.py":
+        if filename.endswith('.py') and filename != "CustomLogging.py":
             # try:
             await client.load_extension(f'cogs.{filename[:-3]}')
             log(f"Loaded cog {filename[:-3]}", "success")

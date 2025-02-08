@@ -2,9 +2,9 @@ import sys
 
 import discord
 from discord.ext import commands
-from .customlogging import log
+from .CustomLogging import log
 
-version = '```V3.7```'
+version = '```V9.1```'
 
 
 class Service(commands.Cog):
