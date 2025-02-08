@@ -27,7 +27,14 @@ class Updater(commands.Cog):
     @commands.hybrid_command(name='updateroles', description="Update your roles")
     async def updateroles(self, ctx):
         log(f"Updating roles for {ctx.author.nick}")
-        roleupdate = await self.role_updater(ctx.author, ctx.guild)
+        db = self.database_connect()
+        if not db:
+            log("Failed to connect to database", "error")
+            return
+
+        mycurs = db.cursor()
+
+        roleupdate = await self.role_updater(ctx.author, ctx.guild, mycurs)
 
         if roleupdate == 0:
             await ctx.send(embed=discord.Embed(title="You're not in our database!",
@@ -40,9 +47,9 @@ class Updater(commands.Cog):
 
         log(f"Completed updating all roles for {ctx.author.nick}\n", 'success')
 
-    @commands.hybrid_command(name='1')
+    @commands.hybrid_command(alias='1')
     @commands.has_permissions(manage_roles=True)
-    async def a(self, ctx):
+    async def refreshroles(self, ctx):
         """Admin Only: Refreshes roles for all users"""
 
         await ctx.send(embed=discord.Embed(title="Started"), ephemeral=True)
@@ -131,7 +138,7 @@ class Updater(commands.Cog):
 
         await log_channel.send(embed=discord.Embed(title=f"{member.nick} has left the server"))
 
-    async def update_user_rating(self, guild, member: discord.Member, rating):
+    async def update_user_rating(self, guild, member: discord.Member, rating, add, remove, roles):
 
         s1Role = int(os.getenv('S1-ROLE'))
         s2Role = int(os.getenv('S2-ROLE'))
@@ -149,53 +156,53 @@ class Updater(commands.Cog):
         I1 = guild.get_role(i1Role)
         I3 = guild.get_role(i3Role)
 
-        roles = member.roles
-
         # await member.remove_roles(S1, S2, S3, C1, C3, I1, I3)
         match rating:
             case 'S1':
                 if S1 not in roles:
-                    await member.add_roles(S1)
+                    add.append(S1)
                     log(f"Giving role S1 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S2, S3, C1, C3, I1, I3])
+                    remove.extend([S2, S3, C1, C3, I1, I3])
 
             case 'S2':
                 if S2 not in roles:
-                    await member.add_roles(S2)
+                    add.append(S2)
                     log(f"Giving role S2 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S3, C1, C3, I1, I3])
+                    remove.extend([S1, S3, C1, C3, I1, I3])
 
             case 'S3':
                 if S3 not in roles:
-                    await member.add_roles(S3)
+                    add.append(S3)
                     log(f"Giving role S3 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S2, C1, C3, I1, I3])
+                    remove.extend([S1, S2, C1, C3, I1, I3])
 
             case 'C1':
                 if C1 not in roles:
-                    await member.add_roles(C1)
+                    add.append(C1)
                     log(f"Giving role C1 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S2, S3, C3, I1, I3])
+                    remove.extend([S1, S2, S3, C3, I1, I3])
 
             case 'C3':
                 if C3 not in roles:
-                    await member.add_roles(C3)
+                    add.append(C3)
                     log(f"Giving role C3 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S2, S3, C1, I1, I3])
+                    remove.extend([S1, S2, S3, C1, I1, I3])
 
             case 'I1':
                 if I1 not in roles:
-                    await member.add_roles(I1)
+                    add.append(I1)
                     log(f"Giving role I1 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I3])
+                    remove.extend([S1, S2, S3, C1, C3, I3])
 
             case 'I3':
                 if I3 not in roles:
-                    await member.add_roles(I3)
+                    add.append(I3)
                     log(f"Giving role I3 to {member.display_name}")
-                    await self.remove_excess_roles(member, [S1, S2, S3, C1, C3, I1])
+                    remove.extend([S1, S2, S3, C1, C3, I1])
 
-    async def update_user_type(self, guild, member: discord.Member, status, instructor):
+        return add, remove
+
+    async def update_user_type(self, guild, member: discord.Member, status, instructor, add, remove, roles):
         # Takes in database info to add home, visiting, and instructor roles
 
         homeRole = int(os.getenv('HOME-ROLE'))
@@ -210,49 +217,49 @@ class Updater(commands.Cog):
         Guest = guild.get_role(guestRole)
         Mentor = guild.get_role(mentorRole)
 
-        roles = member.roles
-
         if status == None and roles != [Guest]:
-            await member.add_roles(Guest)
+            add.append(Guest)
             log(f"Giving role {Guest.name} to {member.display_name}")
-            await self.remove_excess_roles(member, [Home, Visit, Instructor, Mentor])
-            return
+            remove.extend([Home, Visit, Instructor, Mentor])
+            return add, remove
 
         match status[0]:
             case 'home':
                 if Home not in roles:
-                    await member.add_roles(Home)
+                    add.append(Home)
                     log(f"Giving role {Home.name} to {member.display_name}")
                 if instructor == None:
-                    await self.remove_excess_roles(member, [Visit, Instructor, Mentor, Guest])
-                    return
+                    remove.extend([Visit, Instructor, Mentor, Guest])
+                    return add, remove
                 elif instructor[0] == 0 and Mentor not in roles:
-                    await member.add_roles(Mentor)
+                    add.append(Mentor)
                     log(f"Giving role {Mentor.name} to {member.display_name}")
-                    await self.remove_excess_roles(member, [Visit, Instructor, Guest])
+                    remove.extend([Visit, Instructor, Guest])
 
                 elif instructor[0] == 1:
                     log("Member status home+instructor OGGA bOGGA", "error")
-                    # await member.add_roles(Instructor)
+                    # add.append(Instructor)
                     # log(f"Giving role {Instructor.name} to {member.display_name}")
-                    # await self.remove_excess_roles(member, [Visit, Mentor, Guest])
+                    # remove.extend([Visit, Mentor, Guest])
 
             case 'visit':
                 if Visit not in roles:
-                    await member.add_roles(Visit)
+                    add.append(Visit)
                     log(f"Giving role {Visit.name} to {member.display_name}")
-                    await self.remove_excess_roles(member, [Home, Instructor, Mentor, Guest])
+                    remove.extend([Home, Instructor, Mentor, Guest])
 
             case 'instructor':
                 if Home not in roles:
-                    await member.add_roles(Home)
+                    add.append(Home)
                     log(f"Giving role {Home.name} to {member.display_name}")
                 if Instructor not in roles:    
-                    await member.add_roles(Instructor)
+                    add.append(Instructor)
                     log(f"Giving role {Instructor.name} to {member.display_name}")
-                    await self.remove_excess_roles(member, [Visit, Guest, Mentor])
+                    remove.extend([Visit, Guest, Mentor])
 
-    async def top_controller(self, guild, member, mycurs):
+        return add, remove
+
+    async def top_controller(self, guild, member, mycurs, add, remove, roles):
         TopRole = int(os.getenv('TOP-ROLE'))
 
         Top = guild.get_role(TopRole)
@@ -277,19 +284,19 @@ class Updater(commands.Cog):
             ORDER BY duration DESC 
             LIMIT 5
         """)
-
-        roles = member.roles
         
         topFive = [row[0] for row in mycurs.fetchall()]  #Fetch all top controllers
 
         if user[0] in topFive:
             if Top not in roles:
                 log("Congrats for being in the top 5...")
-                await member.add_roles(Top)
+                add.append(Top)
         else:
             if Top in member.roles:
                 log("Not a top controller anymore...")
-                await member.remove_roles(Top)
+                remove.append(Top)
+
+        return add, remove
 
     async def set_nickname(self, guild, member: discord.Member, fname, lname, cid, cid_only, fullname):
         # Check if the member is the guild owner, and if so, do nothing
@@ -340,6 +347,10 @@ class Updater(commands.Cog):
         Verified = guild.get_role(verifiedRole)
         Guest = guild.get_role(guestRole)
 
+        add = []
+        remove = []
+        roles = member.roles
+
         """Updates roles for a single user using a shared DB connection"""
 
         mycurs.execute(
@@ -357,14 +368,21 @@ class Updater(commands.Cog):
             return 0
 
         member = await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
-        await member.add_roles(Verified)
+        
+        if Verified not in roles:
+            add.append(Verified)
         if user[7] > 0:
-            await self.update_user_rating(guild, member, user[2])
+            add, remove = await self.update_user_rating(guild, member, user[2],add,remove,roles)
 
         mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
 
-        await self.update_user_type(guild, member, status, instructor)
-        await self.top_controller(guild, member, mycurs)
+        add, remove = await self.update_user_type(guild, member, status, instructor, add, remove, roles)
+        add, remove = await self.top_controller(guild, member, mycurs, add, remove, roles)
+
+        if add:
+            await member.add_roles(*add)
+        if remove:
+            await self.remove_excess_roles(member, remove)
