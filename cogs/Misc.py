@@ -119,9 +119,9 @@ class Misc(commands.Cog):
                     case 'MVFR':
                         colour = 0xB2D33C
                     case 'IFR':
-                        colour = 0xE3B031
-                    case 'LIFR':
                         colour = 0xF15025
+                    case 'LIFR':
+                        colour = 0x873cab
                     case _:
                         colour = 0x000000
 
