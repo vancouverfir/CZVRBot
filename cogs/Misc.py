@@ -122,6 +122,20 @@ class Misc(commands.Cog):
                     pass
                 
                 try:
+                    wind_speed = metar_data['data'][0]['wind']['speed_kts']
+                    wind_direction = metar_data['data'][0]['wind']['degrees']
+                except KeyError:
+                    wind_speed = '0'
+                    wind_direction = '000'
+                embed.add_field(name="Wind", value=f"{wind_direction} at {wind_speed} knots")
+
+                try:
+                    time = metar_data['data'][0]['observed'][-8:-3] + 'Z'
+                    embed.add_field(name="Time", value=time)
+                except KeyError:
+                    pass
+                
+                try:
                     temperature = metar_data['data'][0]['temperature']['celsius']
                     dewpoint = metar_data['data'][0]['dewpoint']['celsius']
                     embed.add_field(name="Temperature", value=f"{temperature}°C/{dewpoint}°C")
@@ -139,25 +153,7 @@ class Misc(commands.Cog):
                     embed.set_footer(text=location)
                 except KeyError:
                     pass
-                
-                try:
-                    time = metar_data['data'][0]['observed'][-8:-3] + 'Z'
-                    embed.add_field(name="Time", value=time)
-                except KeyError:
-                    pass
-
-                try:
-                    wind_speed = metar_data['data'][0]['wind']['speed_kts']
-                    wind_direction = metar_data['data'][0]['wind']['degrees']
-                except KeyError:
-                    wind_speed = '0'
-                    wind_direction = '000'
-                embed.add_field(name="Wind", value=f"{wind_direction} at {wind_speed} knots")
-                
-
-                
-                
-
+                         
                 await ctx.send(embed=embed)
             else:
                 log(f"Unable to fetch metar for {icao}", "warn")
