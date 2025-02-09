@@ -83,7 +83,7 @@ class Misc(commands.Cog):
                 log(f"Unable to fetch metar for {icao}", "warn")
                 await ctx.send(embed=discord.Embed(
                     title="Unknown Airport",
-                    description=f"Error: Could not fetch airport information. Please check the ICAO code and try again",
+                    description="Error: Could not fetch airport information. Please check the ICAO code and try again",
                     color=0xF23131
                 ))
                 return
@@ -97,21 +97,8 @@ class Misc(commands.Cog):
 
             if 'data' in metar_data and metar_data['data']:
                 airport_name = metar_data['data'][0]['station']['name']
-                altimeter = metar_data['data'][0]['barometer']['hg']
                 metar = metar_data['data'][0]['raw_text']
-                temperature = metar_data['data'][0]['temperature']['celsius']
-                dewpoint = metar_data['data'][0]['dewpoint']['celsius']
-                visibility = metar_data['data'][0]['visibility']['miles']
                 flight_condition = metar_data['data'][0]['flight_category']
-                location = metar_data['data'][0]['station']['location']
-                time = metar_data['data'][0]['observed'][-8:-3] + 'Z'
-
-                try:
-                    wind_speed = metar_data['data'][0]['wind']['speed_kts']
-                    wind_direction = metar_data['data'][0]['wind']['degrees']
-                except KeyError:
-                    wind_speed = '0'
-                    wind_direction = '000'
 
                 match flight_condition:
                     case 'VFR':
@@ -127,19 +114,56 @@ class Misc(commands.Cog):
 
                 embed = discord.Embed(title=airport_name, description=f"```{metar}```", colour=colour)
                 embed.add_field(name="Flight Conditions", value=flight_condition)
-                embed.add_field(name="Altimeter", value=altimeter)
+
+                try:
+                    altimeter = metar_data['data'][0]['barometer']['hg']
+                    embed.add_field(name="Altimeter", value=altimeter)
+                except KeyError:
+                    pass
+                
+                try:
+                    temperature = metar_data['data'][0]['temperature']['celsius']
+                    dewpoint = metar_data['data'][0]['dewpoint']['celsius']
+                    embed.add_field(name="Temperature", value=f"{temperature}°C/{dewpoint}°C")
+                except KeyError:
+                    pass
+
+                try:
+                    visibility = metar_data['data'][0]['visibility']['miles']
+                    embed.add_field(name="Visibility", value=f"{visibility} SM")
+                except KeyError:
+                    pass
+
+                try:
+                    location = metar_data['data'][0]['station']['location']
+                    embed.set_footer(text=location)
+                except KeyError:
+                    pass
+                
+                try:
+                    time = metar_data['data'][0]['observed'][-8:-3] + 'Z'
+                    embed.add_field(name="Time", value=time)
+                except KeyError:
+                    pass
+
+                try:
+                    wind_speed = metar_data['data'][0]['wind']['speed_kts']
+                    wind_direction = metar_data['data'][0]['wind']['degrees']
+                except KeyError:
+                    wind_speed = '0'
+                    wind_direction = '000'
                 embed.add_field(name="Wind", value=f"{wind_direction} at {wind_speed} knots")
-                embed.add_field(name="Time", value=time)
-                embed.add_field(name="Temperature", value=f"{temperature}°C/{dewpoint}°C")
-                embed.add_field(name="Visibility", value=f"{visibility} SM")
-                embed.set_footer(text=location)
+                
+
+                
+                
 
                 await ctx.send(embed=embed)
             else:
                 log(f"Unable to fetch metar for {icao}", "warn")
                 await ctx.send(embed=discord.Embed(
                     title="Unknown Airport",
-                    description=f"Error: Could not fetch airport information. Please check the ICAO code and try again",
+                    description="Error: Could not fetch airport information. Please check the ICAO code and try again",
                     color=0xF23131
                 ))
                 
@@ -148,7 +172,7 @@ class Misc(commands.Cog):
             log(f"Unable to fetch metar for {icao}", "warn")
             await ctx.send(embed=discord.Embed(
                 title="Unknown Airport",
-                description=f"Error: Could not fetch airport information. Please check the ICAO code and try again",
+                description="Error: Could not fetch airport information. Please check the ICAO code and try again",
                 color=0xF23131
             ))
         log(f"Metar for {icao} fetched successfully", "success")

@@ -217,10 +217,11 @@ class Updater(commands.Cog):
         Guest = guild.get_role(guestRole)
         Mentor = guild.get_role(mentorRole)
 
-        if status == None and roles != [Guest]:
-            add.append(Guest)
-            log(f"Giving role {Guest.name} to {member.display_name}")
-            remove.extend([Home, Visit, Instructor, Mentor])
+        if status == None:
+            if Guest not in roles:
+                add.append(Guest)
+                log(f"Giving role {Guest.name} to {member.display_name}")
+                remove.extend([Home, Visit, Instructor, Mentor])
             return add, remove
 
         match status[0]:
