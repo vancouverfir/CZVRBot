@@ -360,7 +360,7 @@ class Updater(commands.Cog):
 
         if not user:
             if Verified in member.roles:
-                # await member.edit(roles=[Verified, Guest])
+                await member.edit(roles=[Verified, Guest])
                 log("Not in the Database, but Verified", "warn")
             else:
                 await member.edit(roles=[Guest])
