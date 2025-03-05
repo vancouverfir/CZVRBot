@@ -12,11 +12,6 @@ class Service(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    # Events
-    @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        log(f"{member} has left the server")
-
     # Commands
     @commands.command(aliases=['p'])
     async def ping(self, ctx):
