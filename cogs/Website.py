@@ -73,7 +73,7 @@ class Website(commands.Cog):
 
         if not hours:
             await ctx.send(embed=discord.Embed(title="You're not a Vancouver",
-                                               description=f"CHIRP!! {ctx.author.mention}, it doesn't look like you are a home or visiting controller, so you have no hours in CZVR. If you are interested in become a CZVR controller do ~joinczvr. If you are interested in visiting CZVR submit a visiting request through vatcan.ca",
+                                               description=f"CHIRP!! {ctx.author.mention}, it doesn't look like you are a home or visiting controller, so you have no hours in CZVR. If you are interested in becoming a CZVR controller run ~joinczvr. If you are interested in visiting CZVR submit a visiting request through vatcan.ca",
                                                colour=0xF23131))
             return
 
