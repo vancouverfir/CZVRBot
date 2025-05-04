@@ -1,6 +1,5 @@
 import os
 
-import asyncio
 import mariadb as mariadb
 import discord
 from discord.ext import commands, tasks
@@ -16,12 +15,41 @@ async def setup(client):
 
 times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15), time(hour=18), time(hour=21), time(hour=0)]
 
+global S1, S2, S3, C1, C3, I3, I1
+global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
 
 class Updater(commands.Cog):
 
     def __init__(self, client):
         self.client = client
         load_dotenv()
+
+    async def global_roles(self):
+        guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
+        
+        global S1, S2, S3, C1, C3, I3, I1
+
+        S1 = guild.get_role(int(os.getenv('S1-ROLE')))
+        S2 = guild.get_role(int(os.getenv('S2-ROLE')))
+        S3 = guild.get_role(int(os.getenv('S3-ROLE')))
+        C1 = guild.get_role(int(os.getenv('C1-ROLE')))
+        C3 = guild.get_role(int(os.getenv('C3-ROLE')))
+        I1 = guild.get_role(int(os.getenv('I1-ROLE')))
+        I3 = guild.get_role(int(os.getenv('I3-ROLE')))
+
+        global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
+
+        Home = guild.get_role(int(os.getenv('HOME-ROLE')))
+        Visit = guild.get_role(int(os.getenv('VISITOR-ROLE')))
+        Instructor = guild.get_role(int(os.getenv('INSTRUCTOR-ROLE')))
+        Guest = guild.get_role(int(os.getenv('GUEST-ROLE')))
+        Mentor = guild.get_role(int(os.getenv('MENTOR-ROLE')))
+        VisitQueue = guild.get_role(int(os.getenv('VISITQUEUE-ROLE')))
+        Verified = guild.get_role(int(os.getenv('VERIFIED-ROLE')))
+        Training = guild.get_role(int(os.getenv('TRAINING-ROLE')))
+        Top = guild.get_role(int(os.getenv('TOP-ROLE')))
+
+
 
 
     @commands.hybrid_command(name='updateroles', description="Update your roles")
@@ -96,6 +124,7 @@ class Updater(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        await self.global_roles()
         self.updateall.start()
 
     @updateall.after_loop
@@ -118,7 +147,7 @@ class Updater(commands.Cog):
     @commands.command()
     async def dm(self, ctx):
         dm = ctx.author.dm_channel
-        if dm == None:
+        if dm is None:
             dm = await ctx.author.create_dm()
         await dm.send("Test")
 
@@ -129,7 +158,7 @@ class Updater(commands.Cog):
         log(f"Completed updating all roles for {member.display_name}\n", "success")
 
         dm = member.dm_channel
-        if dm == None:
+        if dm is None:
             dm = await member.create_dm()
             log(f"Created dm channel for {member.display_name}", "success")
         
@@ -148,25 +177,8 @@ class Updater(commands.Cog):
 
         await log_channel.send(embed=discord.Embed(title=f"{member.nick} has left the server"))
 
-    async def update_user_rating(self, guild, member: discord.Member, rating, add, remove, roles):
+    async def update_user_rating(self, member: discord.Member, rating, add, remove, roles):
 
-        s1Role = int(os.getenv('S1-ROLE'))
-        s2Role = int(os.getenv('S2-ROLE'))
-        s3Role = int(os.getenv('S3-ROLE'))
-        c1Role = int(os.getenv('C1-ROLE'))
-        c3Role = int(os.getenv('C3-ROLE'))
-        i1Role = int(os.getenv('I1-ROLE'))
-        i3Role = int(os.getenv('I3-ROLE'))
-
-        S1 = guild.get_role(s1Role)
-        S2 = guild.get_role(s2Role)
-        S3 = guild.get_role(s3Role)
-        C1 = guild.get_role(c1Role)
-        C3 = guild.get_role(c3Role)
-        I1 = guild.get_role(i1Role)
-        I3 = guild.get_role(i3Role)
-
-        # await member.remove_roles(S1, S2, S3, C1, C3, I1, I3)
         match rating:
             case 'S1':
                 if S1 not in roles:
@@ -212,28 +224,14 @@ class Updater(commands.Cog):
 
         return add, remove
 
-    async def update_user_type(self, guild, member: discord.Member, status, instructor, add, remove, roles):
+    async def update_user_type(self, member: discord.Member, status, instructor, add, remove, roles):
         # Takes in database info to add home, visiting, and instructor roles
 
-        homeRole = int(os.getenv('HOME-ROLE'))
-        visitorRole = int(os.getenv('VISITOR-ROLE'))
-        guestRole = int(os.getenv('GUEST-ROLE'))
-        mentorRole = int(os.getenv('MENTOR-ROLE'))
-        instructorRole = int(os.getenv('INSTRUCTOR-ROLE'))
-        queueRole = int(os.getenv('VISITQUEUE-ROLE'))
-
-        Home = guild.get_role(homeRole)
-        Visit = guild.get_role(visitorRole)
-        Instructor = guild.get_role(instructorRole)
-        Guest = guild.get_role(guestRole)
-        Mentor = guild.get_role(mentorRole)
-        Queue = guild.get_role(queueRole)
-
-        if status == None:
+        if status is None:
             if Guest not in roles:
                 add.append(Guest)
                 log(f"Giving role {Guest.name} to {member.display_name}")
-                remove.extend([Home, Visit, Instructor, Mentor])
+                remove.extend([Home, Visit, Instructor, Mentor, Training, VisitQueue])
             return add, remove
 
         match status[0]:
@@ -241,13 +239,17 @@ class Updater(commands.Cog):
                 if Home not in roles:
                     add.append(Home)
                     log(f"Giving role {Home.name} to {member.display_name}")
-                if instructor == None:
-                    remove.extend([Visit, Instructor, Mentor, Guest])
+                if instructor is None:
+                    remove.extend([Visit, Instructor, Mentor, Guest, Training, VisitQueue])
                     return add, remove
-                elif instructor[0] == 0 and Mentor not in roles:
-                    add.append(Mentor)
-                    log(f"Giving role {Mentor.name} to {member.display_name}")
-                    remove.extend([Visit, Instructor, Guest])
+                elif instructor[0] == 0 and (Mentor not in roles or Training not in roles):
+                    if Mentor not in roles:
+                        add.append(Mentor)
+                        log(f"Giving role {Mentor.name} to {member.display_name}")
+                    if Training not in roles:
+                        add.append(Training)
+                        log(f"Giving role {Training.name} to {member.display_name}")
+                    remove.extend([Visit, Instructor, Guest, VisitQueue])
 
                 elif instructor[0] == 1:
                     log("Member status home+instructor OGGA bOGGA", "error")
@@ -259,15 +261,15 @@ class Updater(commands.Cog):
                 if Visit not in roles:
                     add.append(Visit)
                     log(f"Giving role {Visit.name} to {member.display_name}")
-                    remove.extend([Home, Instructor, Mentor, Guest])
+                    remove.extend([Home, Instructor, Mentor, Guest, Training])
 
-                if status[1] == 0 and status[2] == 0 and Queue not in roles:
-                    add.append(Queue)
-                    log(f"Giving role {Queue.name} to {member.display_name}")
+                if status[1] == 0 and status[2] == 0 and VisitQueue not in roles:
+                    add.append(VisitQueue)
+                    log(f"Giving role {VisitQueue.name} to {member.display_name}")
                 
-                elif (status[1] != 0 or status[2] != 0) and Queue in roles:
-                    remove.append(Queue)
-                    log(f"Member {member.display_name} has qualifications removing {Queue.name}")
+                elif (status[1] != 0 or status[2] != 0) and VisitQueue in roles:
+                    remove.append(VisitQueue)
+                    log(f"Member {member.display_name} has qualifications removing {VisitQueue.name}")
 
             case 'instructor':
                 if Home not in roles:
@@ -276,15 +278,16 @@ class Updater(commands.Cog):
                 if Instructor not in roles:    
                     add.append(Instructor)
                     log(f"Giving role {Instructor.name} to {member.display_name}")
-                    remove.extend([Visit, Guest, Mentor])
+                    remove.extend([Visit, Guest, Mentor, VisitQueue])
+
+                if Training not in roles:
+                    add.append(Training)
+                    log(f"Giving role {Training.name} to {member.display_name}")
 
         return add, remove
 
-    async def top_controller(self, guild, member, mycurs, add, remove, roles):
-        TopRole = int(os.getenv('TOP-ROLE'))
-
-        Top = guild.get_role(TopRole)
-
+    async def top_controller(self, member, mycurs, add, remove, roles):
+        
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {member.id}")
         user = mycurs.fetchone()
 
@@ -362,11 +365,7 @@ class Updater(commands.Cog):
                 log(f"     Removing Role {role.name} to {member.display_name}")
 
     async def role_updater(self, member, guild, mycurs):
-        verifiedRole = int(os.getenv('VERIFIED-ROLE'))
-        guestRole = int(os.getenv('GUEST-ROLE'))
-
-        Verified = guild.get_role(verifiedRole)
-        Guest = guild.get_role(guestRole)
+        
 
         add = []
         remove = []
@@ -388,6 +387,7 @@ class Updater(commands.Cog):
 
             await member.edit(roles=[])
             log("Not in the Database! Removing all roles", "warn")
+            self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])        
 
             return 0
 
@@ -396,15 +396,15 @@ class Updater(commands.Cog):
         if Verified not in roles:
             add.append(Verified)
         if user[7] > 0:
-            add, remove = await self.update_user_rating(guild, member, user[2],add,remove,roles)
+            add, remove = await self.update_user_rating(member, user[2],add,remove,roles)
 
         mycurs.execute(f"SELECT status, delgnd, fss FROM roster WHERE user_id = {user[0]}")
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
 
-        add, remove = await self.update_user_type(guild, member, status, instructor, add, remove, roles)
-        add, remove = await self.top_controller(guild, member, mycurs, add, remove, roles)
+        add, remove = await self.update_user_type(member, status, instructor, add, remove, roles)
+        add, remove = await self.top_controller(member, mycurs, add, remove, roles)
 
         if add:
             await member.add_roles(*add)

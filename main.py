@@ -21,7 +21,7 @@ async def on_ready():
     log(f"We have logged in as {client.user}", "success")
 
     await client.tree.sync()
-    log(f'Slash commands synced', "success")
+    log('Slash commands synced', "success")
 
     activity = discord.Activity(type=discord.ActivityType.watching, name="the Events Team for Time Zone errors")
     await client.change_presence(status=discord.Status.online, activity=activity)

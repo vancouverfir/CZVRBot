@@ -77,7 +77,7 @@ class Website(commands.Cog):
                                                colour=0xF23131))
             return
 
-        if hours[0] == None:
+        if hours[0] is None:
             hours = [0.0]
 
         if role[0] == "exec":
