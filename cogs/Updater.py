@@ -384,12 +384,18 @@ class Updater(commands.Cog):
             # else:
             #     await member.edit(roles=[Guest])
             #     log("Not in the Database!", "warn")
+            log("Not in the Database!", "warn")
+            if Guest in member.roles:
+                member.remove_roles(Guest)
+                log("Removing Guest role")
 
-            await member.edit(roles=[])
-            log("Not in the Database! Removing all roles", "warn")
-            self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])        
+            if Verified in member.roles:
+                member.remove_roles(Verified)
+                log("Removing Verified role", "warn")
 
-            return 0
+           self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])
+
+           return 0
 
         member = await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
         
