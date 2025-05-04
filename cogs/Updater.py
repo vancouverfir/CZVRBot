@@ -260,8 +260,8 @@ class Updater(commands.Cog):
                     add.append(Visit)
                     log(f"Giving role {Visit.name} to {member.display_name}")
                     remove.extend([Home, Instructor, Mentor, Guest])
-                    
-                if status[1] == '0' and status[2] == '0' and Queue not in roles:
+
+                if status[1] == 0 and status[2] == 0 and Queue not in roles:
                     add.append(Queue)
                     log(f"Giving role {Queue.name} to {member.display_name}")
                 
