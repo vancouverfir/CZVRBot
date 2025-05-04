@@ -212,12 +212,14 @@ class Updater(commands.Cog):
         guestRole = int(os.getenv('GUEST-ROLE'))
         mentorRole = int(os.getenv('MENTOR-ROLE'))
         instructorRole = int(os.getenv('INSTRUCTOR-ROLE'))
+        queueRole = int(os.getenv('VISITQUEUE-ROLE'))
 
         Home = guild.get_role(homeRole)
         Visit = guild.get_role(visitorRole)
         Instructor = guild.get_role(instructorRole)
         Guest = guild.get_role(guestRole)
         Mentor = guild.get_role(mentorRole)
+        Queue = guild.get_role(queueRole)
 
         if status == None:
             if Guest not in roles:
@@ -250,6 +252,14 @@ class Updater(commands.Cog):
                     add.append(Visit)
                     log(f"Giving role {Visit.name} to {member.display_name}")
                     remove.extend([Home, Instructor, Mentor, Guest])
+                    
+                if status[1] == '0' and status[2] == '0' and Queue not in roles:
+                    add.append(Queue)
+                    log(f"Giving role {Queue.name} to {member.display_name}")
+                
+                elif (status[1] != 0 or status[2] != 0) and Queue in roles:
+                    remove.append(Queue)
+                    log(f"Member {member.display_name} has qualifications removing {Queue.name}")
 
             case 'instructor':
                 if Home not in roles:
@@ -377,7 +387,7 @@ class Updater(commands.Cog):
         if user[7] > 0:
             add, remove = await self.update_user_rating(guild, member, user[2],add,remove,roles)
 
-        mycurs.execute(f"SELECT status FROM roster WHERE user_id = {user[0]}")
+        mycurs.execute(f"SELECT status, delgnd, fss FROM roster WHERE user_id = {user[0]}")
         status = mycurs.fetchone()
         mycurs.execute(f"SELECT is_instructor FROM teachers WHERE user_cid= {user[0]}")
         instructor = mycurs.fetchone()
