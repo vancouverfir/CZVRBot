@@ -59,7 +59,7 @@ class Updater(commands.Cog):
     async def updateall(self, suppress=True):
         """Used to update roles for all users with a single DB connection"""
         try:
-            log("Batch updating roles for all users")
+            log("Batch updating roles for all users\n")
 
             guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
             dev_channel = self.client.get_channel(int(os.getenv('DEV-CHANNEL')))
@@ -115,6 +115,13 @@ class Updater(commands.Cog):
 
         await ctx.send(embed=discord.Embed(title=f"Auto Role Updater is scheduled to run next at {self.updateall.next_iteration.strftime('%H:%M')}Z", description=f"That's in {hours} hours and {mins} minutes"))
 
+    @commands.command()
+    async def dm(self, ctx):
+        dm = ctx.author.dm_channel
+        if dm == None:
+            dm = await ctx.author.create_dm()
+        await dm.send("Test")
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
         log(f"{member} has joined the server")
@@ -124,6 +131,7 @@ class Updater(commands.Cog):
         dm = member.dm_channel
         if dm == None:
             dm = await member.create_dm()
+            log(f"Created dm channel for {member.display_name}", "success")
         
         if roleupdate == 0:
             await dm.send(embed=discord.Embed(title="You're not in our database!", description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at https://www.czvr.ca, then run /updateroles to be assigned your roles", colour=0xF23131))
