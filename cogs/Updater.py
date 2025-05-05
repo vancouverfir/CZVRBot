@@ -26,7 +26,7 @@ class Updater(commands.Cog):
 
     async def global_roles(self):
         guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
-        
+
         global S1, S2, S3, C1, C3, I3, I1
 
         S1 = guild.get_role(int(os.getenv('S1-ROLE')))
@@ -48,9 +48,6 @@ class Updater(commands.Cog):
         Verified = guild.get_role(int(os.getenv('VERIFIED-ROLE')))
         Training = guild.get_role(int(os.getenv('TRAINING-ROLE')))
         Top = guild.get_role(int(os.getenv('TOP-ROLE')))
-
-
-
 
     @commands.hybrid_command(name='updateroles', description="Update your roles")
     async def updateroles(self, ctx):
@@ -161,7 +158,7 @@ class Updater(commands.Cog):
         if dm is None:
             dm = await member.create_dm()
             log(f"Created dm channel for {member.display_name}", "success")
-        
+
         if roleupdate == 0:
             await dm.send(embed=discord.Embed(title="You're not in our database!", description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at https://www.czvr.ca, then run /updateroles to be assigned your roles", colour=0xF23131))
             log("DM Sent, member account not linked", "warning")
@@ -266,7 +263,7 @@ class Updater(commands.Cog):
                 if status[1] == 0 and status[2] == 0 and VisitQueue not in roles:
                     add.append(VisitQueue)
                     log(f"Giving role {VisitQueue.name} to {member.display_name}")
-                
+
                 elif (status[1] != 0 or status[2] != 0) and VisitQueue in roles:
                     remove.append(VisitQueue)
                     log(f"Member {member.display_name} has qualifications removing {VisitQueue.name}")
@@ -287,7 +284,7 @@ class Updater(commands.Cog):
         return add, remove
 
     async def top_controller(self, member, mycurs, add, remove, roles):
-        
+
         mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {member.id}")
         user = mycurs.fetchone()
 
@@ -301,14 +298,14 @@ class Updater(commands.Cog):
         # print(f"start of month: {dateStart}, end of month: {dateEnd}")
 
         mycurs.execute(f"""
-            SELECT cid, SUM(duration) AS duration 
-            FROM {os.getenv('DB-NAME')}.session_logs 
-            WHERE session_start BETWEEN '{dateStart}' AND '{dateEnd}' 
-            GROUP BY cid  
-            ORDER BY duration DESC 
+            SELECT cid, SUM(duration) AS duration
+            FROM {os.getenv('DB-NAME')}.session_logs
+            WHERE session_start BETWEEN '{dateStart}' AND '{dateEnd}'
+            GROUP BY cid
+            ORDER BY duration DESC
             LIMIT 5
         """)
-        
+
         topFive = [row[0] for row in mycurs.fetchall()]  #Fetch all top controllers
 
         if user[0] in topFive:
@@ -365,7 +362,6 @@ class Updater(commands.Cog):
                 log(f"     Removing Role {role.name} to {member.display_name}")
 
     async def role_updater(self, member, guild, mycurs):
-        
 
         add = []
         remove = []
@@ -397,7 +393,7 @@ class Updater(commands.Cog):
             return 0
 
         member = await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
-        
+
         if Verified not in roles:
             add.append(Verified)
         if user[7] > 0:

@@ -120,7 +120,7 @@ class Misc(commands.Cog):
                     embed.add_field(name="Altimeter", value=altimeter)
                 except KeyError:
                     pass
-                
+
                 try:
                     wind_speed = metar_data['data'][0]['wind']['speed_kts']
                     wind_direction = metar_data['data'][0]['wind']['degrees']
@@ -134,7 +134,7 @@ class Misc(commands.Cog):
                     embed.add_field(name="Time", value=time)
                 except KeyError:
                     pass
-                
+
                 try:
                     temperature = metar_data['data'][0]['temperature']['celsius']
                     dewpoint = metar_data['data'][0]['dewpoint']['celsius']
@@ -153,7 +153,7 @@ class Misc(commands.Cog):
                     embed.set_footer(text=location)
                 except KeyError:
                     pass
-                         
+
                 await ctx.send(embed=embed)
             else:
                 log(f"Unable to fetch metar for {icao}", "warn")
@@ -162,7 +162,7 @@ class Misc(commands.Cog):
                     description="Error: Could not fetch airport information. Please check the ICAO code and try again",
                     color=0xF23131
                 ))
-                
+
                 return
         else:
             log(f"Unable to fetch metar for {icao}", "warn")
