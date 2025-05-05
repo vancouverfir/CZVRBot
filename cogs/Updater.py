@@ -393,9 +393,8 @@ class Updater(commands.Cog):
                 member.remove_roles(Verified)
                 log("Removing Verified role", "warn")
 
-           self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])
-
-           return 0
+            self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])
+            return 0
 
         member = await self.set_nickname(guild, member, user[5], user[6], user[0], user[3], user[4])
         
