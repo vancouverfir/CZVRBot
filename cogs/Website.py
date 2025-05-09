@@ -12,7 +12,7 @@ class Website(commands.Cog):
     def __init__(self, client):
         self.client = client
         load_dotenv()
-    
+
     @commands.hybrid_command(name='waitlist', description="Check your position on the waitlist")
     async def waitlist(self, ctx):
         mycurs = self.database_connect()
@@ -63,8 +63,7 @@ class Website(commands.Cog):
 
         if not user:
             await ctx.send(embed=discord.Embed(title="You're not in our database!",
-                                               description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca",
-                                               colour=0xF23131))
+                description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your discord account in your dashboard at http://www.czvr.ca", colour=0xF23131))
             return
 
         mycurs.execute(f"SELECT currency FROM roster WHERE cid = {user[0]}")
@@ -73,8 +72,7 @@ class Website(commands.Cog):
 
         if not hours:
             await ctx.send(embed=discord.Embed(title="You're not a Vancouver",
-                                               description=f"CHIRP!! {ctx.author.mention}, it doesn't look like you are a home or visiting controller, so you have no hours in CZVR. If you are interested in becoming a CZVR controller run ~joinczvr. If you are interested in visiting CZVR submit a visiting request through vatcan.ca",
-                                               colour=0xF23131))
+                description=f"CHIRP!! {ctx.author.mention}, it doesn't look like you are a home or visiting controller, so you have no hours in CZVR. If you are interested in becoming a CZVR controller run ~joinczvr. If you are interested in visiting CZVR submit a visiting request through vatcan.ca", colour=0xF23131))
             return
 
         if hours[0] is None:
@@ -91,9 +89,8 @@ class Website(commands.Cog):
             await ctx.send(embed=discord.Embed(title=f"Your activity this quarter is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this quarter: ({reqhrs} hours)."))
         elif hours[0] < reqhrs:
             await ctx.send(embed=discord.Embed(title="Not Yet Meeting Quarterly Hours",
-                                               description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.",
-                                               colour=0xF23131))
-            
+                description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.", colour=0xF23131))
+
         log(f"{ctx.author.nick} has {hours[0]} of {reqhrs} required hours for this quarter")
 
     def database_connect(self):

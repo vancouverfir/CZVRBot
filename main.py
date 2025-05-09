@@ -50,8 +50,6 @@ async def loadallcogs():
             # except:
             #     log(f"Failed to load cogs.{filename[:-3]}", "error")
 
-
-
 # Errors
 @client.event
 async def on_command_error(ctx, error):
@@ -68,7 +66,7 @@ async def on_command_error(ctx, error):
 
     else:
         await ctx.send(embed=discord.Embed(title="An Error Has Occured", description=error, colour = 0xF23131))
-        log(error, 'error')        
+        log(error, 'error')
 
 async def main():
     await loadallcogs()
