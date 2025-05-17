@@ -17,6 +17,7 @@ times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15),
 
 global S1, S2, S3, C1, C3, I3, I1
 global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
+global guild
 
 class Updater(commands.Cog):
 
@@ -25,6 +26,8 @@ class Updater(commands.Cog):
         load_dotenv()
 
     async def global_roles(self):
+        global guild
+        
         guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
 
         global S1, S2, S3, C1, C3, I3, I1
@@ -151,7 +154,15 @@ class Updater(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         log(f"{member} has joined the server")
-        roleupdate = await self.role_updater(member, member.guild)
+
+        db = self.database_connect()
+        if not db:
+            log("Failed to connect to database", "error")
+            return
+
+        mycurs = db.cursor()
+
+        roleupdate = await self.role_updater(member, guild, mycurs)
         log(f"Completed updating all roles for {member.display_name}\n", "success")
 
         dm = member.dm_channel
