@@ -240,7 +240,11 @@ class Updater(commands.Cog):
                 add.append(Guest)
                 log(f"Giving role {Guest.name} to {member.display_name}")
                 remove.extend([Home, Visit, Instructor, Mentor, Training, VisitQueue])
-                remove.extend([S1, S2, S3, C1, C3, I1, I3])
+            
+            matches = [item for item in member.roles if item in [S1, S2, S3, C1, C3, I1, I3]]
+            if matches:
+                remove.extend(matches)
+                
             return add, remove
 
         match status[0]:
