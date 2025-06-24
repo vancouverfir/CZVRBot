@@ -171,7 +171,7 @@ class Updater(commands.Cog):
             log(f"Created dm channel for {member.display_name}", "success")
 
         if roleupdate == 0:
-            await dm.send(embed=discord.Embed(title="You're not in our database!", description="CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at https://www.czvr.ca, then run /updateroles to be assigned your roles", colour=0xF23131))
+            await dm.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {member.mention}, you are not in our database, please link your discord account in your dashboard at https://www.czvr.ca, then run /updateroles to be assigned your roles", colour=0xF23131))
             log("DM Sent, member account not linked", "warn")
         else:
             await dm.send(embed=discord.Embed(title="Welcome! Your roles have been assigned!", description=f"{member.mention}, chirp! Your roles have been added! Thanks for linking your discord!"))
