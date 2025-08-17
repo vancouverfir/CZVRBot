@@ -24,18 +24,34 @@ class Website(commands.Cog):
             await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your Discord account in your dashboard at http://www.czvr.ca",colour = 0xF23131), ephemeral=True)
             return
 
-        mycurs.execute("SELECT user_id FROM students WHERE status = 0")
-        waitlist = mycurs.fetchall()
+        mycurs.execute("SELECT position FROM students WHERE user_id = %s AND status = 0", (user[0],))
+        student_position = mycurs.fetchone()
+
+        mycurs.execute("SELECT position FROM students WHERE user_id = %s AND status = 3", (user[0],))
+        visitor_position = mycurs.fetchone()
 
         mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
         waittime = mycurs.fetchone()
         mycurs.close()
 
-        for position, person in enumerate(waitlist):
-            if user[0] == person[0]:
+        if student_position:
+            await ctx.send(embed=discord.Embed(
+                title="Keep on waiting!",
+                description=f"Beep! {ctx.author.mention}, your waitlist position is **{student_position[0]}**. "
+                            f"Once it is your turn your instructor will reach out to you.\n\n"
+                            f"Make sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!!\n\n"
+                            f"The Current wait time to start ground and delivery training is approximately **{waittime[0]}**."
+            ), ephemeral=True)
+            return
 
-                await ctx.send(embed=discord.Embed(title="Keep on waiting",description=f"Beep! {ctx.author.mention}, your waitlist position is **{position+1}**. Once it is your turn your instructor will reach out to you. \n\nMake sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!\n\nThe Current wait time to start ground and delivery training is approximately **{waittime[0]}**."), ephemeral=True)
-                return
+        elif visitor_position:
+            await ctx.send(embed=discord.Embed(
+                title="Visitor, Keep on waiting!",
+                description=f"Beep! {ctx.author.mention}, we don’t offer a waitlist for Visitors!"
+                            f"When an instructor is available, you will be notified in https://discord.com/channels/589477926961938443/981664706953625640!\n\n"
+                            f"Make sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!!"
+            ), ephemeral=True)
+            return
 
         await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you believe this is an error contact our Chief Instructor!\n\nThe current wait time in Vancouver to begin delivery and ground training is approximately **{waittime[0]}**."), ephemeral=True)
 
