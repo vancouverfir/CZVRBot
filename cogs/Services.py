@@ -6,6 +6,7 @@ import datetime
 import discord
 from datetime import timedelta
 from discord.ext import commands
+from discord.ext import tasks
 from .CustomLogging import log
 from discord.ui import View, Button
 
@@ -13,6 +14,9 @@ version = '```1```'
 
 CHANNEL_ID = 1322096208751099964
 ROLE_ID = 1173032507818651699
+
+PING_CHANNEL_ID = 1231992993196802080
+PING_ROLE_ID = 975260844323635275
 
 YES = ["Absolutely!", "Count me in", "Totally", "Fo shizzle"]
 MAYBE = ["Maybe if Mom lets me", "Possibly", "We'll see", "Can't contrizzle"]
@@ -26,7 +30,7 @@ class Service(commands.Cog):
 
     async def cog_load(self):
         """Start the scheduled WCW poll when the cog loads"""
-        self.wcw_task = asyncio.create_task(self.schedule_wcw_poll())
+        self.wcw_task.start()
 
     def cog_unload(self):
         """Cancel scheduled task if cog is unloaded"""
@@ -52,23 +56,11 @@ class Service(commands.Cog):
         await self.client.close()
         sys.exit()
 
-    async def schedule_wcw_poll(self):
-        """Send the poll every Sunday at 08:00 UTC (12 hours before Event)"""
-        await self.client.wait_until_ready()
-        while not self.client.is_closed():
-            now = datetime.datetime.utcnow()
-            days_ahead = 6 - now.weekday()
-            if days_ahead < 0:
-                days_ahead += 7
-            next_sunday = (now + datetime.timedelta(days=days_ahead)).replace(
-                hour=8, minute=0, second=0, microsecond=0
-            )
-            if next_sunday <= now:
-                next_sunday += datetime.timedelta(weeks=1)
-
-            wait_seconds = (next_sunday - now).total_seconds()
-            await asyncio.sleep(wait_seconds)
-
+    @tasks.loop(hours=1)
+    async def wcw_task(self):
+        """Check every hour, send reminder at 21:00 UTC Saturday"""
+        now = datetime.datetime.utcnow()
+        if now.weekday() == 5 and now.hour == 21:
             await self.send_wcw_prompt()
 
     async def send_wcw_prompt(self):
@@ -105,8 +97,6 @@ class WCWPromptView(View):
         try:
             await interaction.response.send_message("✅ Created!", ephemeral=False)
 
-            channel = interaction.client.get_channel(CHANNEL_ID)
-
             options = [
                 random.choice(YES),
                 random.choice(MAYBE),
@@ -115,14 +105,16 @@ class WCWPromptView(View):
 
             poll = discord.Poll(
                 question="🐦 Will you be controlling this Weekend for WCW?",
-                duration=timedelta(hours=11),
+                duration=timedelta(hours=23),
                 multiple=False
             )
 
             for option in options:
                 poll.add_answer(text=option)
 
-            await channel.send(poll=poll)
+            first_channel = interaction.client.get_channel(PING_CHANNEL_ID)
+            if first_channel:
+                await first_channel.send(content=f"<@&{PING_ROLE_ID}>", poll=poll)
 
         except Exception as e:
             print("❌ ERROR Creating WCW poll! ", e)
