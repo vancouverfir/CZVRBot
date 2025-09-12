@@ -26,7 +26,6 @@ class Service(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.wcw_task = None
 
     async def cog_load(self):
         """Start the scheduled WCW poll when the cog loads"""

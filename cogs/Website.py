@@ -13,47 +13,9 @@ class Website(commands.Cog):
         self.client = client
         load_dotenv()
 
-    @commands.hybrid_command(name='waitlist', description="Check your position on the waitlist")
+    @commands.hybrid_command(name='waitlist')
     async def waitlist(self, ctx):
-        mycurs = self.database_connect()
-
-        mycurs.execute(f"SELECT id FROM users WHERE discord_user_id = {ctx.author.id}")
-        user = mycurs.fetchone()
-
-        if not user:
-            await ctx.send(embed=discord.Embed(title="You're not in our database!", description=f"CHIRP!! {ctx.author.mention}, you are not in our database, please link your Discord account in your dashboard at http://www.czvr.ca",colour = 0xF23131), ephemeral=True)
-            return
-
-        mycurs.execute("SELECT position FROM students WHERE user_id = %s AND status = 0", (user[0],))
-        student_position = mycurs.fetchone()
-
-        mycurs.execute("SELECT position FROM students WHERE user_id = %s AND status = 3", (user[0],))
-        visitor_position = mycurs.fetchone()
-
-        mycurs.execute("SELECT wait_length FROM training_waittimes WHERE id = 1")
-        waittime = mycurs.fetchone()
-        mycurs.close()
-
-        if student_position:
-            await ctx.send(embed=discord.Embed(
-                title="Keep on waiting!",
-                description=f"Beep! {ctx.author.mention}, your waitlist position is **{student_position[0]}**. "
-                            f"Once it is your turn your instructor will reach out to you.\n\n"
-                            f"Make sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!!\n\n"
-                            f"The Current wait time to start ground and delivery training is approximately **{waittime[0]}**."
-            ), ephemeral=True)
-            return
-
-        elif visitor_position:
-            await ctx.send(embed=discord.Embed(
-                title="Visitor, Keep on waiting!",
-                description=f"Beep! {ctx.author.mention}, we don’t offer a waitlist for Visitors!"
-                            f"When an instructor is available, you will be notified in https://discord.com/channels/589477926961938443/981664706953625640!\n\n"
-                            f"Make sure you have emails from @vatcan.ca and @czvr.ca whitelisted in your spam filter!!!"
-            ), ephemeral=True)
-            return
-
-        await ctx.send(embed=discord.Embed(title="You are not on the waitlist",description=f"CHIRP!! {ctx.author.mention}, you are not on our waitlist. If you believe this is an error contact our Chief Instructor!\n\nThe current wait time in Vancouver to begin delivery and ground training is approximately **{waittime[0]}**."), ephemeral=True)
+        await ctx.send(embed=discord.Embed(title="This command has moved!",description=f"CHIRP!!! {ctx.author.mention} this command has moved to our ✨ shiny ✨ new training portal! Visit https://training.czvr.ca for live info!"), ephemeral=True)
 
     @commands.hybrid_command(name='waittime', description="Check the current estimated wait time for new Home Controller Training")
     async def waittime(self, ctx):
