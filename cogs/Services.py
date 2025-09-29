@@ -19,8 +19,8 @@ PING_CHANNEL_ID = 1231992993196802080
 PING_ROLE_ID = 975260844323635275
 
 YES = ["Absolutely!", "Count me in", "Totally", "Fo shizzle"]
-MAYBE = ["Maybe if Mom lets me", "Possibly", "We'll see", "Can't contrizzle"]
-NO = ["Nope", "Not happening", "Definitely not", "Might drop bizzle"]
+MAYBE = ["Maybe if Mom lets me", "Possibly", "We'll see", "Might drop bizzle"]
+NO = ["Nope", "Not happening", "Definitely not", "Can't contrizzle"]
 
 class Service(commands.Cog):
 
