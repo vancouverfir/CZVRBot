@@ -406,7 +406,7 @@ class Updater(commands.Cog):
                     remove.append(role_obj)
                     log(f"Removing staff role {role_obj.name} from {member.display_name}")
 
-            has_staff_entries = bool(staff_entries)
+            has_staff_entries = any(db_id in staff_role_ids for db_id in desired_role_ids)
             has_staff_role = STAFF_ROLE in roles
 
             if has_staff_entries and not has_staff_role:
