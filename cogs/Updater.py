@@ -17,6 +17,7 @@ times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15),
 
 global S1, S2, S3, C1, C3, I3, I1
 global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
+global STAFF, CHIEF, DEPUTY, CI, FE, EC, WM
 global guild
 
 class Updater(commands.Cog):
@@ -27,7 +28,7 @@ class Updater(commands.Cog):
 
     async def global_roles(self):
         global guild
-        
+
         guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
 
         global S1, S2, S3, C1, C3, I3, I1
@@ -51,6 +52,16 @@ class Updater(commands.Cog):
         Verified = guild.get_role(int(os.getenv('VERIFIED-ROLE')))
         Training = guild.get_role(int(os.getenv('TRAINING-ROLE')))
         Top = guild.get_role(int(os.getenv('TOP-ROLE')))
+
+        global STAFF, CHIEF, DEPUTY, CI, FE, EC, WM
+
+        STAFF = guild.get_role(int(os.getenv('STAFF-ROLE')))
+        CHIEF = guild.get_role(int(os.getenv('CHIEF-ROLE')))
+        DEPUTY = guild.get_role(int(os.getenv('DEPUTY-ROLE')))
+        CI = guild.get_role(int(os.getenv('CI-ROLE')))
+        FE = guild.get_role(int(os.getenv('FE-ROLE')))
+        EC = guild.get_role(int(os.getenv('EC-ROLE')))
+        WM = guild.get_role(int(os.getenv('WM-ROLE')))
 
     @commands.hybrid_command(name='updateroles', description="Update your roles")
     async def updateroles(self, ctx):
@@ -240,11 +251,11 @@ class Updater(commands.Cog):
                 add.append(Guest)
                 log(f"Giving role {Guest.name} to {member.display_name}")
                 remove.extend([Home, Visit, Instructor, Mentor, Training, VisitQueue])
-            
+
             matches = [item for item in member.roles if item in [S1, S2, S3, C1, C3, I1, I3]]
             if matches:
                 remove.extend(matches)
-                
+
             return add, remove
 
         match status[0]:
@@ -265,10 +276,10 @@ class Updater(commands.Cog):
                     remove.extend([Visit, Instructor, Guest, VisitQueue])
 
                 elif instructor[0] == 1:
-                    log("Member status home+instructor OGGA bOGGA", "error")
-                    # add.append(Instructor)
-                    # log(f"Giving role {Instructor.name} to {member.display_name}")
-                    # remove.extend([Visit, Mentor, Guest])
+                    log("Member has permissions home but certification Instructor!", "error")
+                    add.append(Instructor)
+                    log(f"Giving role {Instructor.name} to {member.display_name}")
+                    remove.extend([Visit, Mentor, Guest])
 
             case 'visit':
                 if Visit not in roles:
@@ -371,11 +382,49 @@ class Updater(commands.Cog):
             log(f"Error connecting to MariaDB Platform: {e}", "error")
             return None
 
+    async def update_staff_roles(self, member, mycurs, add, remove, roles):
+        try:
+            mycurs.execute(f"""
+                SELECT sm.id
+                FROM staff_member sm
+                JOIN users u ON sm.user_id = u.id
+                WHERE u.discord_user_id = {member.id} AND sm.user_id != 1
+            """)
+            staff_entries = mycurs.fetchall()
+
+            staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 5: FE, 6: EC, 7: WM}
+
+            STAFF_ROLE = STAFF
+
+            desired_role_ids = {entry[0] for entry in staff_entries}
+
+            for db_id, role_obj in staff_role_ids.items():
+                if db_id in desired_role_ids and role_obj not in roles:
+                    add.append(role_obj)
+                    log(f"Giving staff role {role_obj.name} to {member.display_name}")
+                elif db_id not in desired_role_ids and role_obj in roles:
+                    remove.append(role_obj)
+                    log(f"Removing staff role {role_obj.name} from {member.display_name}")
+
+            if staff_entries and STAFF_ROLE not in roles:
+                add.append(STAFF_ROLE)
+                log(f"Giving generic STAFF role to {member.display_name}")
+
+            if not staff_entries and STAFF_ROLE in roles:
+                remove.append(STAFF_ROLE)
+                log(f"Removing generic STAFF role from {member.display_name}")
+
+            return add, remove
+
+        except Exception as e:
+            log(f"Error in updating staff roles: {e}", "error")
+            return add, remove
+
     async def remove_excess_roles(self, member, roles):
         for role in roles:
             if role in member.roles:
                 await member.remove_roles(role)
-                log(f"     Removing Role {role.name} to {member.display_name}")
+                log(f"Removing Role {role.name} from {member.display_name}")
 
     async def role_updater(self, member, guild, mycurs):
 
@@ -422,6 +471,7 @@ class Updater(commands.Cog):
 
         add, remove = await self.update_user_type(member, status, instructor, add, remove, roles)
         add, remove = await self.top_controller(member, mycurs, add, remove, roles)
+        add, remove = await self.update_staff_roles(member, mycurs, add, remove, roles)
 
         if add:
             await member.add_roles(*add)
