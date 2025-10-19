@@ -299,7 +299,7 @@ class Updater(commands.Cog):
                 if Home not in roles:
                     add.append(Home)
                     log(f"Giving role {Home.name} to {member.display_name}")
-                if Instructor not in roles:    
+                if Instructor not in roles:
                     add.append(Instructor)
                     log(f"Giving role {Instructor.name} to {member.display_name}")
                     remove.extend([Visit, Guest, Mentor, VisitQueue])
@@ -384,12 +384,12 @@ class Updater(commands.Cog):
 
     async def update_staff_roles(self, member, mycurs, add, remove, roles):
         try:
-            mycurs.execute(f"""
+            mycurs.execute("""
                 SELECT sm.id
                 FROM staff_member sm
                 JOIN users u ON sm.user_id = u.id
-                WHERE u.discord_user_id = {member.id} AND sm.user_id != 1
-            """)
+                WHERE u.discord_user_id = %s AND sm.user_id != 1
+            """, (member.id,))
             staff_entries = mycurs.fetchall()
 
             staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 5: FE, 6: EC, 7: WM}
@@ -406,14 +406,20 @@ class Updater(commands.Cog):
                     remove.append(role_obj)
                     log(f"Removing staff role {role_obj.name} from {member.display_name}")
 
-            if staff_entries and STAFF_ROLE not in roles:
+            has_staff_entries = bool(staff_entries)
+            has_staff_role = STAFF_ROLE in roles
+
+            if has_staff_entries and not has_staff_role:
                 add.append(STAFF_ROLE)
                 log(f"Giving generic STAFF role to {member.display_name}")
-
-            if not staff_entries and STAFF_ROLE in roles:
+            elif not has_staff_entries and has_staff_role:
                 remove.append(STAFF_ROLE)
                 log(f"Removing generic STAFF role from {member.display_name}")
 
+            return add, remove
+
+        except Exception as e:
+            log(f"Error in updating staff roles for {member.display_name}: {e}")
             return add, remove
 
         except Exception as e:
