@@ -17,7 +17,7 @@ times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15),
 
 global S1, S2, S3, C1, C3, I3, I1
 global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
-global STAFF, CHIEF, DEPUTY, CI, FE, EC, WM
+global STAFF, CHIEF, DEPUTY, CI, DCI, FE, EC, WM
 global guild
 
 class Updater(commands.Cog):
@@ -53,12 +53,13 @@ class Updater(commands.Cog):
         Training = guild.get_role(int(os.getenv('TRAINING-ROLE')))
         Top = guild.get_role(int(os.getenv('TOP-ROLE')))
 
-        global STAFF, CHIEF, DEPUTY, CI, FE, EC, WM
+        global STAFF, CHIEF, DEPUTY, CI, DCI, FE, EC, WM
 
         STAFF = guild.get_role(int(os.getenv('STAFF-ROLE')))
         CHIEF = guild.get_role(int(os.getenv('CHIEF-ROLE')))
         DEPUTY = guild.get_role(int(os.getenv('DEPUTY-ROLE')))
         CI = guild.get_role(int(os.getenv('CI-ROLE')))
+        DCI = guild.get_role(int(os.getenv('DCI-ROLE')))
         FE = guild.get_role(int(os.getenv('FE-ROLE')))
         EC = guild.get_role(int(os.getenv('EC-ROLE')))
         WM = guild.get_role(int(os.getenv('WM-ROLE')))
@@ -392,7 +393,7 @@ class Updater(commands.Cog):
             """, (member.id,))
             staff_entries = mycurs.fetchall()
 
-            staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 5: FE, 6: EC, 7: WM}
+            staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 4:DCI, 5: FE, 6: EC, 7: WM}
 
             STAFF_ROLE = STAFF
 
