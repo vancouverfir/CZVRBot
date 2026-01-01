@@ -13,10 +13,6 @@ class Website(commands.Cog):
         self.client = client
         load_dotenv()
 
-    @commands.hybrid_command(name='waitlist')
-    async def waitlist(self, ctx):
-        await ctx.send(embed=discord.Embed(title="This command has moved!",description=f"CHIRP!!! {ctx.author.mention} this command has moved to our ✨ shiny ✨ new training portal! Visit https://training.czvr.ca for live info!"), ephemeral=True)
-
     @commands.hybrid_command(name='waittime', description="Check the current estimated wait time for new Home Controller Training")
     async def waittime(self, ctx):
 
@@ -63,13 +59,26 @@ class Website(commands.Cog):
         else:
             reqhrs = 3
 
-        if hours[0] >= reqhrs:
-            await ctx.send(embed=discord.Embed(title=f"Your activity this quarter is {hours[0]} hours! \n\n Congrats, you have met your minimum required hours this quarter: ({reqhrs} hours)."))
-        elif hours[0] < reqhrs:
-            await ctx.send(embed=discord.Embed(title="Not Yet Meeting Quarterly Hours",
-                description=f"Your activity this quarter is {hours[0]}. You require a minimum of {reqhrs} hours each quarter.", colour=0xF23131))
+        total_hours = int(hours[0])
 
-        log(f"{ctx.author.nick} has {hours[0]} of {reqhrs} required hours for this quarter")
+        total_minutes = int((hours[0] - total_hours) * 60)
+
+        human_readable_time = f"{total_hours} hours {total_minutes} minutes"
+
+        if hours[0] >= reqhrs:
+            await ctx.send(embed=discord.Embed(
+                title=f"Your activity this quarter is {human_readable_time}!",
+                description=f"Congrats! You have met your minimum required hours this quarter! [{reqhrs} hours]",
+                color=discord.Color.green()
+            ))
+        else:
+            await ctx.send(embed=discord.Embed(
+                title="Not Yet Meeting Quarterly Hours",
+                description=f"Your activity this quarter is {human_readable_time}! You require a minimum of {reqhrs} hours each quarter!",
+                colour=discord.Color.purple()
+            ))
+
+        log(f"{ctx.author.nick} has {human_readable_time} of {reqhrs} required hours for this quarter!")
 
     def database_connect(self):
         dbhost = os.getenv('DB-HOST')

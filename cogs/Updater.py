@@ -446,20 +446,14 @@ class Updater(commands.Cog):
         user = mycurs.fetchone()
 
         if not user:
-            # if Verified in member.roles:
-            #     await member.edit(roles=[Verified, Guest])
-            #     log("Not in the Database, but Verified", "warn")
-            # else:
-            #     await member.edit(roles=[Guest])
-            #     log("Not in the Database!", "warn")
-            log("Not in the Database!", "warn")
+            log("Not in the Database!", "info")
             if Guest in member.roles:
                 member.remove_roles(Guest)
                 log("Removing Guest role")
 
             if Verified in member.roles:
                 member.remove_roles(Verified)
-                log("Removing Verified role", "warn")
+                log("Removing Verified role", "info")
 
             self.remove_excess_roles(member,[S1, S2, S3, C1, C3, I1, I3])
             return 0

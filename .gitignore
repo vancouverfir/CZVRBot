@@ -27,6 +27,7 @@ share/python-wheels/
 MANIFEST
 
 Logs/
+event_channels.json
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

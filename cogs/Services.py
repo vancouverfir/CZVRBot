@@ -64,10 +64,6 @@ class Service(commands.Cog):
 
     async def send_wcw_prompt(self):
         channel = self.client.get_channel(CHANNEL_ID)
-        if not channel:
-            print("ERROR: WCW channel not found!")
-            return
-
         role_ping = f"<@&{ROLE_ID}>"
 
         embed = discord.Embed(
@@ -91,11 +87,10 @@ class WCWPromptView(View):
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.success)
     async def yes_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.defer(ephemeral=False)
         await self.remove_buttons(interaction)
 
         try:
-            await interaction.response.send_message("✅ Created!", ephemeral=False)
-
             options = [
                 random.choice(YES),
                 random.choice(MAYBE),
@@ -114,6 +109,8 @@ class WCWPromptView(View):
             first_channel = interaction.client.get_channel(PING_CHANNEL_ID)
             if first_channel:
                 await first_channel.send(content=f"<@&{PING_ROLE_ID}>", poll=poll)
+
+            await interaction.followup.send("✅ Created!", ephemeral=False)
 
         except Exception as e:
             print("❌ ERROR Creating WCW poll! ", e)
