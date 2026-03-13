@@ -15,7 +15,7 @@ async def setup(client):
 
 times = [time(hour=3), time(hour=6), time(hour=9), time(hour=12), time(hour=15), time(hour=18), time(hour=21), time(hour=0)]
 
-global S1, S2, S3, C1, C3, I3, I1
+global OBS, S1, S2, S3, C1, C3, I3, I1
 global Home, Visit, Instructor, Guest, Mentor, VisitQueue, Training, Verified, Top
 global STAFF, CHIEF, DEPUTY, CI, DCI, FE, EC, WM
 global guild
@@ -31,8 +31,9 @@ class Updater(commands.Cog):
 
         guild = self.client.get_guild(int(os.getenv('GUILD-ID')))
 
-        global S1, S2, S3, C1, C3, I3, I1
+        global OBS, S1, S2, S3, C1, C3, I3, I1
 
+        OBS = guild.get_role(int(os.getenv('OBS-ROLE')))
         S1 = guild.get_role(int(os.getenv('S1-ROLE')))
         S2 = guild.get_role(int(os.getenv('S2-ROLE')))
         S3 = guild.get_role(int(os.getenv('S3-ROLE')))
@@ -200,6 +201,11 @@ class Updater(commands.Cog):
     async def update_user_rating(self, member: discord.Member, rating, add, remove, roles):
 
         match rating:
+            case 'OBS':
+                if OBS not in roles:
+                    add.append(OBS)
+                    log(f"Giving role OBS to {member.display_name}")
+                    remove.extend([S1, S2, S3, C1, C3, I1, I3])
             case 'S1':
                 if S1 not in roles:
                     add.append(S1)
