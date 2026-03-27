@@ -47,7 +47,7 @@ class Misc(commands.Cog):
     async def joinczvr(self, ctx):
         embed = discord.Embed()
         embed.add_field(name="How To Join",
-                        value="\nTo join the CZVR FIR you will need to first be a member of VATCAN and have your S1 Rating. You can request a transfer by following the steps here: https://czvr.ca/join. \n\nOnce accepted you will receive an email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n\n*NOTE: We highly recommend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter* \n\n**... I mean SQUAWK.**",
+                        value="\nTo join the CZVR FIR you will need to first be a member of VATCAN. You can request a transfer by following the steps here: https://czvr.ca/join. \n\nOnce accepted you will receive an email from no-reply@vatcan.ca with further instructions before you are placed on the waitlist. \n\n*NOTE: We highly recommend whitelisting any @vatcan.ca or @czvr.ca Emails in your spam filter* \n\n**... I mean SQUAWK.**",
                         inline=False)
         await ctx.send(embed=embed)
 
@@ -130,7 +130,7 @@ class Misc(commands.Cog):
                 embed.add_field(name="Wind", value=f"{wind_direction} at {wind_speed} knots")
 
                 try:
-                    time = metar_data['data'][0]['observed'][-8:-3] + 'Z'
+                    time = metar_data['data'][0]['observed'][-9:-4] + 'Z'
                     embed.add_field(name="Time", value=time)
                 except KeyError:
                     pass
