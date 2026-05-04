@@ -64,114 +64,93 @@ class Misc(commands.Cog):
         icao = icao.upper()
 
         navcanada_url = f"https://plan.navcanada.ca/weather/api/alpha/?site={icao}&alpha=metar"
-        navcanada_response = requests.get(navcanada_url)
-
-        if navcanada_response.status_code == 200:
-            navcanada_data = navcanada_response.json()
-
-            if 'data' in navcanada_data and navcanada_data['data']:
-                metar_text = navcanada_data['data'][0]['text']
-                if "LWIS" in metar_text:
-                    start_validity = navcanada_data['data'][0]['startValidity']
-                    start_time = datetime.strptime(start_validity, "%Y-%m-%dT%H:%M:%S")
-                    formatted_time = start_time.strftime("%H:%MZ")
-                    embed = discord.Embed(title=f"LWIS for {icao}", description=f"```{metar_text}```", colour=0x6CC24A)
-                    embed.add_field(name="Time", value=formatted_time, inline=False)
-                    await ctx.send(embed=embed)
-                    return
-            else:
-                log(f"Unable to fetch metar for {icao}", "warn")
-                await ctx.send(embed=discord.Embed(
-                    title="Unknown Airport",
-                    description="Error: Could not fetch airport information. Please check the ICAO code and try again",
-                    color=0xF23131
-                ))
-                return
+        try:
+            navcanada_response = requests.get(navcanada_url, timeout=5)
+            if navcanada_response.status_code == 200:
+                navcanada_data = navcanada_response.json()
+                if navcanada_data.get('data'):
+                    metar_text = navcanada_data['data'][0]['text']
+                    if "LWIS" in metar_text:
+                        start_validity = navcanada_data['data'][0]['startValidity']
+                        start_time = datetime.strptime(start_validity, "%Y-%m-%dT%H:%M:%S")
+                        formatted_time = start_time.strftime("%H:%MZ")
+                        embed = discord.Embed(title=f"LWIS for {icao}", description=f"```{metar_text}```", colour=0x6CC24A)
+                        embed.add_field(name="Time", value=formatted_time, inline=False)
+                        await ctx.send(embed=embed)
+                        return
+        except Exception as e:
+            log(f"NavCanada check skipped: {e}", "info")
 
         wxapikey = os.getenv('WX-API')
-        checkwx_url = f"https://api.checkwx.com/metar/{icao}/decoded?key={wxapikey}"
-        checkwx_response = requests.get(checkwx_url)
-
+        checkwx_url = f"https://api.checkwx.com/v2/metar/{icao}/decoded"
+        headers = {'X-API-Key': wxapikey}
+        checkwx_response = requests.get(checkwx_url, headers=headers)
         if checkwx_response.status_code == 200:
             metar_data = checkwx_response.json()
-
             if 'data' in metar_data and metar_data['data']:
-                airport_name = metar_data['data'][0]['station']['name']
-                metar = metar_data['data'][0]['raw_text']
-                flight_condition = metar_data['data'][0]['flight_category']
-
-                match flight_condition:
-                    case 'VFR':
-                        colour = 0x6CC24A
-                    case 'MVFR':
-                        colour = 0xB2D33C
-                    case 'IFR':
-                        colour = 0xF15025
-                    case 'LIFR':
-                        colour = 0x873cab
-                    case _:
-                        colour = 0x000000
-
-                embed = discord.Embed(title=airport_name, description=f"```{metar}```", colour=colour)
+                data = metar_data['data'][0]
+                station = data.get('station')
+                station = station if isinstance(station, dict) else {}
+                airport_name = station.get('name', icao)
+                raw_metar = data.get('raw_text', 'No METAR text')
+                flight_condition = data.get('flight_category', 'N/A')
+                color_map = {
+                    'VFR': 0x6CC24A,
+                    'MVFR': 0xB2D33C,
+                    'IFR': 0xF15025,
+                    'LIFR': 0x873cab
+                }
+                colour = color_map.get(flight_condition, 0x000000)
+                embed = discord.Embed(title=airport_name, description=f"```{raw_metar}```", colour=colour)
                 embed.add_field(name="Flight Conditions", value=flight_condition)
 
-                try:
-                    altimeter = metar_data['data'][0]['barometer']['hg']
-                    embed.add_field(name="Altimeter", value=altimeter)
-                except KeyError:
-                    pass
+                pressure = data.get('pressure')
+                pressure = pressure if isinstance(pressure, dict) else {}
+                if pressure.get('hg'):
+                    embed.add_field(name="Altimeter", value=pressure['hg'])
 
-                try:
-                    wind_speed = metar_data['data'][0]['wind']['speed_kts']
-                    wind_direction = metar_data['data'][0]['wind']['degrees']
-                except KeyError:
-                    wind_speed = '0'
-                    wind_direction = '000'
-                embed.add_field(name="Wind", value=f"{wind_direction} at {wind_speed} knots")
-
-                try:
-                    time = metar_data['data'][0]['observed'][-9:-4] + 'Z'
-                    embed.add_field(name="Time", value=time)
-                except KeyError:
-                    pass
-
-                try:
-                    temperature = metar_data['data'][0]['temperature']['celsius']
-                    dewpoint = metar_data['data'][0]['dewpoint']['celsius']
-                    embed.add_field(name="Temperature", value=f"{temperature}°C/{dewpoint}°C")
-                except KeyError:
-                    pass
-
-                try:
-                    visibility = metar_data['data'][0]['visibility']['miles']
-                    embed.add_field(name="Visibility", value=f"{visibility} SM")
-                except KeyError:
-                    pass
-
-                try:
-                    location = metar_data['data'][0]['station']['location']
+                wind = data.get('wind')
+                wind = wind if isinstance(wind, dict) else {}
+                if wind:
+                    speed = wind.get('speed')
+                    speed = speed if isinstance(speed, dict) else {}
+                    w_speed = speed.get('kts', '0')
+                    w_dir = wind.get('degrees', '000')
+                    gust = wind.get('gust')
+                    gust = gust if isinstance(gust, dict) else {}
+                    gust_kts = gust.get('kts')
+                    wind_str = f"{w_dir}° at {w_speed} kts"
+                    if gust_kts:
+                        wind_str += f" (gusting {gust_kts} kts)"
+                    embed.add_field(name="Wind", value=wind_str)
+                observed = data.get('observed')
+                if observed and isinstance(observed, str):
+                    embed.add_field(name="Time", value=f"{observed[11:16]}Z")
+                temperature = data.get('temperature')
+                temperature = temperature if isinstance(temperature, dict) else {}
+                dewpoint = data.get('dewpoint')
+                dewpoint = dewpoint if isinstance(dewpoint, dict) else {}
+                temp = temperature.get('celsius')
+                dew = dewpoint.get('celsius')
+                if temp is not None:
+                    embed.add_field(name="Temperature", value=f"{temp}°C/{dew if dew is not None else '??'}°C")
+                visibility = data.get('visibility')
+                visibility = visibility if isinstance(visibility, dict) else {}
+                vis = visibility.get('miles')
+                if vis:
+                    embed.add_field(name="Visibility", value=f"{vis} SM")
+                location = station.get('location')
+                if location:
                     embed.set_footer(text=location)
-                except KeyError:
-                    pass
-
                 await ctx.send(embed=embed)
-            else:
-                log(f"Unable to fetch metar for {icao}", "warn")
-                await ctx.send(embed=discord.Embed(
-                    title="Unknown Airport",
-                    description="Error: Could not fetch airport information. Please check the ICAO code and try again",
-                    color=0xF23131
-                ))
-
+                log(f"Metar for {icao} fetched successfully", "success")
                 return
-        else:
-            log(f"Unable to fetch metar for {icao}", "warn")
-            await ctx.send(embed=discord.Embed(
-                title="Unknown Airport",
-                description="Error: Could not fetch airport information. Please check the ICAO code and try again",
-                color=0xF23131
-            ))
-        log(f"Metar for {icao} fetched successfully", "success")
+        log(f"Unable to fetch metar for {icao}", "warn")
+        await ctx.send(embed=discord.Embed(
+            title="Unknown Airport",
+            description=f"Error: Could not fetch airport information. Please check the code and try again.",
+            color=0xF23131
+        ))
 
     @commands.command(aliases=['whatcom'])
     async def huh(self, ctx):
