@@ -4,7 +4,7 @@ import aiohttp
 import pymysql
 import discord
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from discord.ext import commands, tasks
 from discord import app_commands
 from cogs.CustomLogging import log
@@ -77,6 +77,70 @@ class ATC(commands.Cog):
             log(f"Error fetching CID for user {discord_user_id}: {e}", "error")
             return None
 
+    def parse_booking_times(self, start_time, end_time):
+        current_year = datetime.now(timezone.utc).year
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+            start_dt = datetime.strptime(f"{current_year}-{start_time}", "%Y-%m-%d %H:%M")
+            end_dt = datetime.strptime(f"{current_year}-{end_time}", "%Y-%m-%d %H:%M")
+
+            if start_dt < now:
+                start_dt = start_dt.replace(year=current_year + 1)
+                end_dt = end_dt.replace(year=current_year + 1)
+
+            return start_dt, end_dt
+        except ValueError:
+            return None, None
+
+    def booking_overlaps_wcw_event(self, start_dt, end_dt):
+        try:
+            conn = self.ensure_conn()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT id
+                    FROM events
+                    WHERE LOWER(name) LIKE %s
+                    AND start_timestamp < %s
+                    AND end_timestamp > %s
+                    LIMIT 1
+                    """,
+                    ("%west coast weekend%", end_dt, start_dt)
+                )
+                return cur.fetchone() is not None
+        except Exception as e:
+            log(f"Error checking West Coast Weekend event overlap: {e}", "error")
+            return None
+
+    def validate_booking_rules(self, start_dt, end_dt):
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        if end_dt <= start_dt:
+            return "❌ Booking end time must be after the start time."
+
+        duration = end_dt - start_dt
+
+        if duration < timedelta(minutes=45):
+            return "❌ Your booking cannot be less than 45 minutes."
+
+        if start_dt - now < timedelta(hours=4):
+            return "❌ Bookings must be created at least 4 hours in advance."
+
+        overlaps_wcw = self.booking_overlaps_wcw_event(start_dt, end_dt)
+
+        if overlaps_wcw is None:
+            return "❌ Could not validate event booking rules. Please try again later."
+
+        max_duration = timedelta(hours=2 if overlaps_wcw else 4)
+
+        if duration > max_duration:
+            if overlaps_wcw:
+                return "❌ Reserved bookings during West Coast Weekend cannot be longer than 2 hours."
+            return "❌ Reserved bookings cannot be longer than 4 hours."
+
+        return None
+
     @tasks.loop(minutes=5)
     async def cleanup_supervision_messages(self):
         now = datetime.now(timezone.utc)
@@ -115,16 +179,14 @@ class ATC(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        current_year = datetime.now().year
-        try:
-            start_dt = datetime.strptime(f"{current_year}-{start_time}", "%Y-%m-%d %H:%M")
-            end_dt = datetime.strptime(f"{current_year}-{end_time}", "%Y-%m-%d %H:%M")
-
-            if start_dt < datetime.now():
-                start_dt = start_dt.replace(year=current_year + 1)
-                end_dt = end_dt.replace(year=current_year + 1)
-        except ValueError:
+        start_dt, end_dt = self.parse_booking_times(start_time, end_time)
+        if not start_dt or not end_dt:
             await interaction.followup.send("❌ Use format: `MM-DD HH:MM` (e.g., 01-01 11:15)", ephemeral=True)
+            return
+
+        validation_error = self.validate_booking_rules(start_dt, end_dt)
+        if validation_error:
+            await interaction.followup.send(validation_error, ephemeral=True)
             return
 
         headers = {'Authorization': f'Bearer {self.booking_api_key}'}
@@ -171,16 +233,15 @@ class ATC(commands.Cog):
     @app_commands.describe(position="Position (e.g., CZVR_CTR)", start_time="MM-DD HH:MM", end_time="MM-DD HH:MM")
     async def supervision_request(self, interaction: discord.Interaction, position: str, start_time: str, end_time: str):
         position = position.upper()
-        current_year = datetime.now().year
 
-        try:
-            start_dt = datetime.strptime(f"{current_year}-{start_time}", "%Y-%m-%d %H:%M")
-            end_dt = datetime.strptime(f"{current_year}-{end_time}", "%Y-%m-%d %H:%M")
-            if start_dt < datetime.now():
-                start_dt = start_dt.replace(year=current_year + 1)
-                end_dt = end_dt.replace(year=current_year + 1)
-        except ValueError:
+        start_dt, end_dt = self.parse_booking_times(start_time, end_time)
+        if not start_dt or not end_dt:
             await interaction.response.send_message("❌ Format: `MM-DD HH:MM` (e.g., 05-20 18:00)", ephemeral=True)
+            return
+
+        validation_error = self.validate_booking_rules(start_dt, end_dt)
+        if validation_error:
+            await interaction.response.send_message(validation_error, ephemeral=True)
             return
 
         start_str_z = start_dt.strftime('%Y-%m-%d %H:%MZ')
@@ -321,6 +382,16 @@ class SupervisionRequestView(discord.ui.View):
             await interaction.response.send_message("❌ Only Mentors or Instructors can accept!", ephemeral=True)
             return
 
+        s_time = self.start_time.replace('Z', '')
+        e_time = self.end_time.replace('Z', '')
+        start_dt = datetime.strptime(s_time, '%Y-%m-%d %H:%M')
+        end_dt = datetime.strptime(e_time, '%Y-%m-%d %H:%M')
+
+        validation_error = self.cog.validate_booking_rules(start_dt, end_dt)
+        if validation_error:
+            await interaction.response.send_message(validation_error, ephemeral=True)
+            return
+
         await interaction.response.defer()
 
         cid = self.cog.get_user_cid(self.user_id)
@@ -328,10 +399,6 @@ class SupervisionRequestView(discord.ui.View):
 
         if cid:
             headers = {'Authorization': f'Bearer {self.cog.booking_api_key}'}
-            s_time = self.start_time.replace('Z', '')
-            e_time = self.end_time.replace('Z', '')
-            start_dt = datetime.strptime(s_time, '%Y-%m-%d %H:%M')
-            end_dt = datetime.strptime(e_time, '%Y-%m-%d %H:%M')
 
             payload = {
                 'callsign': self.position.upper(),
