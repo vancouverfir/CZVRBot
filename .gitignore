@@ -28,6 +28,7 @@ MANIFEST
 
 Logs/
 event_channels.json
+pride_achievements.json
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

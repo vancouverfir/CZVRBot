@@ -399,17 +399,27 @@ class Updater(commands.Cog):
             """, (member.id,))
             staff_entries = mycurs.fetchall()
 
-            staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 4:DCI, 5: FE, 6: EC, 7: WM}
-
-            STAFF_ROLE = STAFF
+            staff_role_ids = {1: CHIEF, 2: DEPUTY, 3: CI, 4: DCI, 53: DCI, 5: FE, 6: EC, 7: WM}
 
             desired_role_ids = {entry[0] for entry in staff_entries}
 
-            for db_id, role_obj in staff_role_ids.items():
-                if db_id in desired_role_ids and role_obj not in roles:
+            for role_obj in set(staff_role_ids.values()):
+
+                matching_ids = {
+                    db_id for db_id, role in staff_role_ids.items()
+                    if role == role_obj
+                }
+
+                should_have = any(
+                    db_id in desired_role_ids
+                    for db_id in matching_ids
+                )
+
+                if should_have and role_obj not in roles:
                     add.append(role_obj)
                     log(f"Giving staff role {role_obj.name} to {member.display_name}")
-                elif db_id not in desired_role_ids and role_obj in roles:
+
+                elif not should_have and role_obj in roles:
                     remove.append(role_obj)
                     log(f"Removing staff role {role_obj.name} from {member.display_name}")
 
