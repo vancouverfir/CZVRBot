@@ -424,13 +424,13 @@ class Updater(commands.Cog):
                     log(f"Removing staff role {role_obj.name} from {member.display_name}")
 
             has_staff_entries = any(db_id in staff_role_ids for db_id in desired_role_ids)
-            has_staff_role = STAFF_ROLE in roles
+            has_staff_role = STAFF in roles
 
             if has_staff_entries and not has_staff_role:
-                add.append(STAFF_ROLE)
+                add.append(STAFF)
                 log(f"Giving generic STAFF role to {member.display_name}")
             elif not has_staff_entries and has_staff_role:
-                remove.append(STAFF_ROLE)
+                remove.append(STAFF)
                 log(f"Removing generic STAFF role from {member.display_name}")
 
             return add, remove

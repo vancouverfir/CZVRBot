@@ -113,7 +113,7 @@ class ATC(commands.Cog):
             log(f"Error checking West Coast Weekend event overlap: {e}", "error")
             return None
 
-    def validate_booking_rules(self, start_dt, end_dt):
+    def validate_booking_rules(self, start_dt, end_dt, enforce_advance=True):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         if end_dt <= start_dt:
@@ -124,7 +124,7 @@ class ATC(commands.Cog):
         if duration < timedelta(minutes=45):
             return "❌ Your booking cannot be less than 45 minutes."
 
-        if start_dt - now < timedelta(hours=4):
+        if enforce_advance and start_dt - now < timedelta(hours=4):
             return "❌ Bookings must be created at least 4 hours in advance."
 
         overlaps_wcw = self.booking_overlaps_wcw_event(start_dt, end_dt)
@@ -147,20 +147,28 @@ class ATC(commands.Cog):
         to_remove = []
         channel = self.client.get_channel(self.supervision_channel)
 
-        if not channel: return
+        if not channel:
+            return
 
         for msg_id_str, data in list(self.supervision_requests.items()):
             try:
-                clean_time = data['end_time'].replace('Z', '')
-                end_dt = datetime.strptime(clean_time, '%Y-%m-%d %H:%M').replace(tzinfo=timezone.utc)
+                start_clean = data["start_time"].replace("Z", "")
+                end_clean = data["end_time"].replace("Z", "")
 
-                if now > end_dt:
+                start_dt = datetime.strptime(start_clean, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+                end_dt = datetime.strptime(end_clean, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+
+                status = data.get("status", "pending")
+
+                if (status == "pending" and now >= start_dt) or (status in ("accepted", "accepted_manual") and now >= end_dt) or status == "expired":
                     try:
                         msg = await channel.fetch_message(int(msg_id_str))
                         await msg.delete()
                     except (discord.NotFound, discord.Forbidden):
                         pass
+
                     to_remove.append(msg_id_str)
+
             except Exception as e:
                 log(f"Cleanup error for msg {msg_id_str}: {e}", "error")
 
@@ -239,7 +247,7 @@ class ATC(commands.Cog):
             await interaction.response.send_message("❌ Format: `MM-DD HH:MM` (e.g., 05-20 18:00)", ephemeral=True)
             return
 
-        validation_error = self.validate_booking_rules(start_dt, end_dt)
+        validation_error = self.validate_booking_rules(start_dt, end_dt, enforce_advance=False)
         if validation_error:
             await interaction.response.send_message(validation_error, ephemeral=True)
             return
@@ -250,7 +258,6 @@ class ATC(commands.Cog):
         clean_start = start_str_z[5:]
         clean_end = end_str_z[5:]
         ts_start = int(start_dt.timestamp())
-        ts_end = int(end_dt.timestamp())
 
         embed = discord.Embed(title="Supervision Request", color=0x800080, timestamp=datetime.now(timezone.utc))
         embed.add_field(name="Controller", value=interaction.user.mention, inline=True)
@@ -364,7 +371,7 @@ class CancelBookingView(discord.ui.View):
 
 class SupervisionRequestView(discord.ui.View):
     def __init__(self, cog, user_id, position, start_time, end_time):
-        super().__init__(timeout=18000)
+        super().__init__(timeout=None)
         self.cog = cog
         self.user_id = user_id
         self.position = position
@@ -387,7 +394,18 @@ class SupervisionRequestView(discord.ui.View):
         start_dt = datetime.strptime(s_time, '%Y-%m-%d %H:%M')
         end_dt = datetime.strptime(e_time, '%Y-%m-%d %H:%M')
 
-        validation_error = self.cog.validate_booking_rules(start_dt, end_dt)
+        msg_id_str = str(interaction.message.id)
+
+        if datetime.now(timezone.utc).replace(tzinfo=None) >= start_dt:
+            if msg_id_str in self.cog.supervision_requests:
+                del self.cog.supervision_requests[msg_id_str]
+                self.cog.save_data()
+
+            await interaction.message.delete()
+            await interaction.response.send_message("❌ This supervision request has expired.", ephemeral=True)
+            return
+
+        validation_error = self.cog.validate_booking_rules(start_dt, end_dt, enforce_advance=False)
         if validation_error:
             await interaction.response.send_message(validation_error, ephemeral=True)
             return
@@ -420,7 +438,6 @@ class SupervisionRequestView(discord.ui.View):
                     log(f"Connection error: {e}", "error")
 
         embed = interaction.message.embeds[0]
-        msg_id_str = str(interaction.message.id)
 
         if api_success:
             embed.color = 0x00ff00
@@ -451,20 +468,6 @@ class SupervisionRequestView(discord.ui.View):
             except Exception as e:
                 log(f"DM Error: {e}", "error")
         self.stop()
-
-    async def on_timeout(self):
-        if self.message:
-            mid = str(self.message.id)
-            if mid in self.cog.supervision_requests:
-                self.cog.supervision_requests[mid]['status'] = 'expired'
-                self.cog.save_data()
-            try:
-                embed = self.message.embeds[0]
-                for i, field in enumerate(embed.fields):
-                    if field.name == "Status":
-                        embed.set_field_at(i, name="Status", value="❌ Expired", inline=False)
-                await self.message.edit(embed=embed, view=None)
-            except: pass
 
 async def setup(client):
     await client.add_cog(ATC(client))
