@@ -364,7 +364,7 @@ class Event(commands.Cog):
             await self.safe_send(interaction, embed=self.embed_event(event), view=self.make_team_buttons(), ephemeral=True)
             return
 
-        rows = self.db_query("SELECT id, name, start_timestamp, end_timestamp, description, image_url FROM events ORDER BY start_timestamp ASC")
+        rows = self.db_query("SELECT id, name, start_timestamp, end_timestamp, description, image_url FROM events ORDER BY start_timestamp ASC LIMIT 25")
         if not rows:
             await self.safe_send(interaction, "No events found!", ephemeral=True)
             return
