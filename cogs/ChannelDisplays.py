@@ -44,8 +44,8 @@ class ChannelDisplays(commands.Cog):
         self.utc_channel_id = int(os.getenv("UTC-CLOCK-CHANNEL"))
         self.vancouver_channel_id = int(os.getenv("VANCOUVER-CLOCK-CHANNEL"))
         self.home_controllers_channel_id = int(os.getenv("HOME-CONTROLLERS-CHANNEL"))
-        self.guild_id = int(os.getenv("GUILD-ID", "0"))
-        self.home_role_id = int(os.getenv("HOME-ROLE", "720782657516077126"))
+        self.guild_id = int(os.getenv("GUILD-ID"))
+        self.home_role_id = int(os.getenv("HOME-ROLE"))
 
     async def cog_load(self):
         self.clock_update.start()
