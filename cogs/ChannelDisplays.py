@@ -34,7 +34,7 @@ def vancouver_channel_name(now=None):
     if minutes:
         offset_text += f":{minutes:02d}"
 
-    return f"{now.tzname()} Live Time ({offset_text}): {now:%H:%M}"
+    return f"ZVR Live Time ({offset_text}): {now:%H:%M}"
 
 
 def home_controller_count(members, role_id):
