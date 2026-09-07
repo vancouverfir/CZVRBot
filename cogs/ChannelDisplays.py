@@ -13,6 +13,7 @@ FIVE_MINUTE_BOUNDARIES = [
     for hour in range(24)
     for minute in range(0, 60, 5)
 ]
+
 VANCOUVER_TIMEZONE = ZoneInfo("America/Vancouver")
 
 
@@ -23,19 +24,13 @@ def utc_channel_name(now=None):
 
 def vancouver_channel_name(now=None):
     now = (now or datetime.now(timezone.utc)).astimezone(VANCOUVER_TIMEZONE)
-    offset = now.utcoffset()
-    total_minutes = int(offset.total_seconds() // 60)
-    sign = "+" if total_minutes >= 0 else "-"
-    hours, minutes = divmod(abs(total_minutes), 60)
-    offset_text = f"UTC{sign}{hours}"
-    if minutes:
-        offset_text += f":{minutes:02d}"
+    offset_hours = int(now.utcoffset().total_seconds() / 3600)
 
-    return f"ZVR Live Time ({offset_text}): {now:%H:%M}"
+    return f"ZVR Live Time (UTC{offset_hours:+d}): {now:%H:%M}"
 
 
 def home_controller_count(members, role_id):
-    return sum(any(role.id == role_id for role in member.roles) for member in members)
+    return sum(member.get_role(role_id) is not None for member in members)
 
 
 class ChannelDisplays(commands.Cog):
@@ -86,6 +81,7 @@ class ChannelDisplays(commands.Cog):
             return
 
         count = home_controller_count(guild.members, self.home_role_id)
+
         await self.update_channel_name(
             self.home_controllers_channel_id,
             f"Home Controllers: {count}",
