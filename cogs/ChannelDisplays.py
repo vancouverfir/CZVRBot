@@ -24,9 +24,6 @@ def utc_channel_name(now=None):
 def vancouver_channel_name(now=None):
     now = (now or datetime.now(timezone.utc)).astimezone(VANCOUVER_TIMEZONE)
     offset = now.utcoffset()
-    if offset is None:
-        raise ValueError("America/Vancouver returned no UTC offset")
-
     total_minutes = int(offset.total_seconds() // 60)
     sign = "+" if total_minutes >= 0 else "-"
     hours, minutes = divmod(abs(total_minutes), 60)
@@ -69,8 +66,6 @@ class ChannelDisplays(commands.Cog):
 
         try:
             await channel.edit(name=desired_name, reason="Update live server display")
-        except discord.Forbidden:
-            log(f"Missing permission to rename display channel {channel_id}", "error")
         except discord.HTTPException as error:
             log(f"Could not rename display channel {channel_id}: {error}", "error")
 
